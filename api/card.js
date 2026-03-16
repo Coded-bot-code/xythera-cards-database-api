@@ -28,16 +28,8 @@ export default function handler(req, res) {
     }
 
     if (card) {
-        const safeCard = { ...card }; 
-        safeCard.raw_image = card.image; // Keep original for WhatsApp bot
-        
-        // 🔥 Point to YOUR custom Vercel proxy, NOT weserv!
-        const host = req.headers['x-forwarded-host'] || req.headers.host;
-        const protocol = req.headers['x-forwarded-proto'] || 'https';
-        
-        safeCard.image = `${protocol}://${host}/api/image?url=${encodeURIComponent(card.image)}`;
-
-        res.status(200).json(safeCard);
+        // Return the RAW Shoob URL. Your WhatsApp bot will use this natively!
+        res.status(200).json(card);
     } else {
         res.status(404).json({ error: "Card not found in Silent Tech Database" });
     }
