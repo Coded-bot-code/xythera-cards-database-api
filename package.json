@@ -1,10 +1,6 @@
 {
   "name": "silent-gacha-engine",
   "version": "1.0.0",
-  "description": "Silent Tech Ultimate Gacha API",
-  "scripts": {
-    "start": "node api/card.js"
-  },
   "dependencies": {
     "axios": "^1.6.8",
     "https-proxy-agent": "^7.0.4"
