@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 🔥 THE MAGIC BULLET: This hides your Vercel URL from Shoob so they don't block the images! -->
+    <meta name="referrer" content="no-referrer" />
+    
     <title>Silent Tech | Gacha API</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
@@ -10,7 +13,6 @@
         body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ffffff; overflow-x: hidden; }
         .code-font { font-family: 'Fira Code', monospace; }
         
-        /* Glassmorphism */
         .glass {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(10px);
@@ -19,7 +21,6 @@
             border-radius: 16px;
         }
 
-        /* Flowing Cards Marquee */
         .marquee-container {
             display: flex;
             overflow: hidden;
@@ -60,7 +61,6 @@
         .flow-sub { font-size: 0.7rem; color: #aaa; }
         .flow-tier { font-size: 0.65rem; color: #10b981; font-weight: 800; margin-top: 2px;}
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
@@ -69,10 +69,8 @@
 </head>
 <body class="antialiased min-h-screen flex flex-col relative">
 
-    <!-- Background Glow Elements -->
     <div class="absolute top-0 left-1/2 w-full h-96 bg-emerald-600 rounded-full mix-blend-multiply filter blur-[150px] opacity-20 transform -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none"></div>
 
-    <!-- Header -->
     <header class="w-full p-6 flex justify-between items-center z-10 border-b border-white/10 glass rounded-none">
         <div class="flex items-center space-x-3">
             <div class="w-8 h-8 rounded bg-emerald-500 flex items-center justify-center font-bold text-black code-font">ST</div>
@@ -87,17 +85,11 @@
         </div>
     </header>
 
-    <!-- Flowing Cards Marquee -->
     <div class="marquee-container mt-8 z-10">
-        <div class="marquee-content" id="marquee1">
-            <!-- Cards will be injected by JS -->
-        </div>
-        <div class="marquee-content" id="marquee2">
-            <!-- Duplicate for seamless infinite scroll -->
-        </div>
+        <div class="marquee-content" id="marquee1"></div>
+        <div class="marquee-content" id="marquee2"></div>
     </div>
 
-    <!-- Main Content -->
     <main class="flex-grow flex flex-col items-center z-10 px-4 py-8">
         
         <div class="text-center mb-12 max-w-2xl">
@@ -105,7 +97,6 @@
             <p class="text-gray-400 text-lg">Secure, high-speed delivery of over 32,500 meticulously indexed characters. Built for enterprise-grade Discord & WhatsApp bots.</p>
         </div>
 
-        <!-- Tabs -->
         <div class="flex space-x-2 mb-8 bg-black p-1 rounded-lg border border-white/10">
             <button id="tab-docs" onclick="switchTab('docs')" class="px-6 py-2 rounded-md bg-white/10 text-white font-semibold transition-all">Documentation</button>
             <button id="tab-test" onclick="switchTab('test')" class="px-6 py-2 rounded-md text-gray-400 hover:text-white font-semibold transition-all">Live Test Playground</button>
@@ -113,7 +104,6 @@
 
         <!-- DOCUMENTATION TAB -->
         <div id="content-docs" class="w-full max-w-4xl space-y-8 pb-20">
-            
             <div class="glass p-6">
                 <h3 class="text-2xl font-bold mb-2">Endpoint URL</h3>
                 <p class="text-gray-400 mb-4">Base URL for all requests.</p>
@@ -164,9 +154,8 @@
                 </table>
             </div>
 
-            <!-- Code Snippets -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Node.js -->
+                <!-- Node.js Snippet -->
                 <div class="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden shadow-2xl">
                     <div class="flex px-4 py-3 bg-[#161b22] space-x-2 items-center border-b border-gray-800">
                         <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
@@ -178,24 +167,16 @@
 <span class="text-pink-400">const</span> axios = <span class="text-blue-300">require</span>(<span class="text-green-300">'axios'</span>);
 
 <span class="text-pink-400">async function</span> <span class="text-yellow-200">pullCard</span>() {
-  <span class="text-pink-400">const</span> url = <span class="text-green-300">'https://shoob-database-api.vercel.app/api/card'</span>;
-  
   <span class="text-pink-400">try</span> {
-    <span class="text-pink-400">const</span> { data } = <span class="text-pink-400">await</span> axios.<span class="text-blue-300">get</span>(url, {
-      <span class="text-blue-300">params</span>: {
-        <span class="text-blue-300">random</span>: <span class="text-purple-400">true</span>,
-        <span class="text-blue-300">key</span>: <span class="text-green-300">'SILENT_TECH_2026'</span>
-      }
+    <span class="text-pink-400">const</span> { data } = <span class="text-pink-400">await</span> axios.<span class="text-blue-300">get</span>(<span class="text-green-300">'https://shoob-database-api.vercel.app/api/card'</span>, {
+      <span class="text-blue-300">params</span>: { <span class="text-blue-300">random</span>: <span class="text-purple-400">true</span>, <span class="text-blue-300">key</span>: <span class="text-green-300">'SILENT_TECH_2026'</span> }
     });
-    
     <span class="text-blue-300">console</span>.<span class="text-yellow-200">log</span>(data.name, data.tier);
-  } <span class="text-pink-400">catch</span> (err) {
-    <span class="text-blue-300">console</span>.<span class="text-yellow-200">error</span>(err.response.data);
-  }
+  } <span class="text-pink-400">catch</span> (err) { <span class="text-blue-300">console</span>.<span class="text-yellow-200">error</span>(err); }
 }</pre>
                 </div>
 
-                <!-- Python -->
+                <!-- Python Snippet -->
                 <div class="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden shadow-2xl">
                     <div class="flex px-4 py-3 bg-[#161b22] space-x-2 items-center border-b border-gray-800">
                         <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
@@ -208,18 +189,11 @@
 
 <span class="text-pink-400">def</span> <span class="text-yellow-200">pull_card</span>():
     url = <span class="text-green-300">"https://shoob-database-api.vercel.app/api/card"</span>
-    params = {
-        <span class="text-green-300">"random"</span>: <span class="text-green-300">"true"</span>,
-        <span class="text-green-300">"key"</span>: <span class="text-green-300">"SILENT_TECH_2026"</span>
-    }
+    params = {<span class="text-green-300">"random"</span>: <span class="text-green-300">"true"</span>, <span class="text-green-300">"key"</span>: <span class="text-green-300">"SILENT_TECH_2026"</span>}
     
     response = requests.<span class="text-blue-300">get</span>(url, params=params)
-    
     <span class="text-pink-400">if</span> response.status_code == <span class="text-purple-400">200</span>:
-        data = response.<span class="text-blue-300">json</span>()
-        <span class="text-blue-300">print</span>(<span class="text-green-300">f"Pulled: {data['name']} [{data['tier']}]"</span>)
-    <span class="text-pink-400">else</span>:
-        <span class="text-blue-300">print</span>(<span class="text-green-300">"Error:"</span>, response.text)</pre>
+        <span class="text-blue-300">print</span>(<span class="text-green-300">f"Pulled: {response.json()['name']}"</span>)</pre>
                 </div>
             </div>
         </div>
@@ -228,7 +202,6 @@
         <div id="content-test" class="w-full max-w-5xl hidden pb-20">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                <!-- Controls -->
                 <div class="glass p-6 lg:col-span-1 h-fit">
                     <h3 class="text-xl font-bold mb-4 flex items-center"><svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> Payload Setup</h3>
                     
@@ -257,10 +230,7 @@
                     </div>
                 </div>
 
-                <!-- Results -->
                 <div class="lg:col-span-2 space-y-6">
-                    
-                    <!-- macOS JSON Terminal -->
                     <div class="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden shadow-2xl relative">
                         <div class="flex px-4 py-3 bg-[#161b22] space-x-2 items-center border-b border-gray-800">
                             <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
@@ -274,12 +244,11 @@
 }</pre>
                     </div>
 
-                    <!-- Visual Render Card -->
                     <div id="visual-render" class="glass p-6 hidden">
                         <h3 class="text-sm font-bold text-gray-400 mb-4 tracking-widest uppercase">Visual Payload Render</h3>
                         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                             <div class="w-48 h-72 rounded-lg border-2 border-white/10 overflow-hidden bg-black flex-shrink-0 relative">
-                                <img id="render-img" src="" onerror="this.src='https://dummyimage.com/400x600/0f172a/10b981.png&text=No+Image'" class="w-full h-full object-cover">
+                                <img id="render-img" src="" onerror="this.src='https://dummyimage.com/400x600/0f172a/ef4444.png&text=Image+Missing'" class="w-full h-full object-cover">
                                 <div id="render-tier" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent p-3 pt-8 text-center font-black text-emerald-400 tracking-widest text-sm drop-shadow-md"></div>
                             </div>
                             <div class="flex flex-col justify-center w-full">
@@ -292,20 +261,14 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
 
     </main>
 
-        <!-- JS Logic -->
+    <!-- JS Logic -->
     <script>
-        // Use our own Vercel endpoint for the Marquee cards
-        function getProxyUrl(url) {
-            return window.location.origin + `/api/image?url=${encodeURIComponent(url)}`;
-        }
-
         const sampleCards = [
             { name: "Eren Yeager", series: "Attack on Titan", tier: "TIER 1", img: "https://api.shoob.gg/site/api/cardr/60a1b2c3d4e5f60017a8b9c0?size=small" },
             { name: "Satoru Gojo", series: "Jujutsu Kaisen", tier: "TIER 1", img: "https://api.shoob.gg/site/api/cardr/603fe685c4946d0017e8011f?size=small" },
@@ -315,12 +278,13 @@
             { name: "Tuesday", series: "Carole & Tuesday", tier: "TIER 4", img: "https://api.shoob.gg/site/api/cardr/5db4fae2b0edd623625d2ad2?size=small" }
         ];
 
+        // Because of <meta name="referrer" content="no-referrer"> we can now just use the raw links safely!
         function buildMarquee() {
             let html = "";
             sampleCards.forEach(c => {
                 html += `
                 <div class="flow-card">
-                    <img src="${getProxyUrl(c.img)}" class="flow-img" onerror="this.style.display='none'">
+                    <img src="${c.img}" class="flow-img" onerror="this.style.display='none'">
                     <div class="flow-text">
                         <div class="flow-title">${c.name}</div>
                         <div class="flow-sub">${c.series}</div>
@@ -344,11 +308,8 @@
 
         function toggleIdInput() {
             const mode = document.getElementById('test-mode').value;
-            if (mode === 'specific') {
-                document.getElementById('id-input-container').classList.remove('hidden');
-            } else {
-                document.getElementById('id-input-container').classList.add('hidden');
-            }
+            if (mode === 'specific') document.getElementById('id-input-container').classList.remove('hidden');
+            else document.getElementById('id-input-container').classList.add('hidden');
         }
 
         function syntaxHighlight(json) {
@@ -397,7 +358,7 @@
                 jsonView.innerHTML = syntaxHighlight(data);
 
                 if (response.ok && data.image) {
-                    // Because api/card.js now returns the Vercel proxy link, we just plug it straight in!
+                    // Injecting raw image URL straight to the HTML
                     document.getElementById('render-img').src = data.image;
                     document.getElementById('render-name').innerText = data.name;
                     document.getElementById('render-series').innerText = data.series;
@@ -413,7 +374,5 @@
             btn.innerHTML = `<span>Execute Request</span>`;
         }
     </script>
-    
-                            
 </body>
 </html>
