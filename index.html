@@ -1,265 +1,302 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 🔥 THE MAGIC BULLET: This hides your Vercel URL from Shoob so they don't block the images! -->
     <meta name="referrer" content="no-referrer" />
-    
-    <title>Silent Tech | Gacha API</title>
+    <title>Silent Tech | Enterprise Gacha API</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        background: '#050505',
+                        surface: '#0A0A0A',
+                        surface2: '#121212',
+                        border: 'rgba(255, 255, 255, 0.08)',
+                        accent: '#10B981'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ffffff; overflow-x: hidden; }
-        .code-font { font-family: 'Fira Code', monospace; }
+        body { background-color: #050505; color: #FAFAFA; overflow-x: hidden; }
         
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
+        /* Subtle grid background */
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at top, black 20%, transparent 80%);
         }
 
-        .marquee-container {
-            display: flex;
-            overflow: hidden;
-            user-select: none;
-            gap: 1.5rem;
-            padding: 20px 0;
-            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
-        .marquee-content {
-            display: flex;
-            flex-shrink: 0;
-            align-items: center;
-            justify-content: space-around;
-            gap: 1.5rem;
-            animation: scroll 25s linear infinite;
-        }
-        @keyframes scroll {
-            from { transform: translateX(0); }
-            to { transform: translateX(calc(-100% - 1.5rem)); }
-        }
-        .flow-card {
-            width: 200px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(8px);
-            transition: transform 0.3s;
-        }
-        .flow-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.1); }
-        .flow-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #111; }
-        .flow-text { margin-left: 12px; }
-        .flow-title { font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px;}
-        .flow-sub { font-size: 0.7rem; color: #aaa; }
-        .flow-tier { font-size: 0.65rem; color: #10b981; font-weight: 800; margin-top: 2px;}
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
+        .input-field {
+            background: #121212; border: 1px solid var(--border); transition: all 0.2s ease;
+        }
+        .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); outline: none; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover { box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); transform: translateY(-1px); }
+
+        /* Smooth Marquee */
+        .marquee-wrapper { display: flex; overflow: hidden; gap: 1.5rem; padding: 2rem 0; mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent); }
+        .marquee-track { display: flex; flex-shrink: 0; align-items: center; gap: 1.5rem; animation: scroll 35s linear infinite; }
+        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(calc(-100% - 1.5rem)); } }
+        
+        .card-pill {
+            display: flex; align-items: center; padding: 6px 16px 6px 6px; border-radius: 99px;
+            background: #121212; border: 1px solid var(--border);
+        }
+        .card-pill img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #222; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col relative">
+<body class="antialiased min-h-screen flex flex-col relative font-sans">
 
-    <div class="absolute top-0 left-1/2 w-full h-96 bg-emerald-600 rounded-full mix-blend-multiply filter blur-[150px] opacity-20 transform -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none"></div>
+    <!-- Background Elements -->
+    <div class="fixed inset-0 bg-grid z-0 pointer-events-none"></div>
+    <div class="fixed top-[-20%] left-1/2 w-[800px] h-[400px] bg-emerald-600/10 rounded-full blur-[120px] transform -translate-x-1/2 pointer-events-none z-0"></div>
 
-    <header class="w-full p-6 flex justify-between items-center z-10 border-b border-white/10 glass rounded-none">
+    <!-- Sticky Navbar -->
+    <header class="w-full h-16 border-b border-white/10 glass-panel fixed top-0 z-50 flex justify-between items-center px-6">
         <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 rounded bg-emerald-500 flex items-center justify-center font-bold text-black code-font">ST</div>
-            <h1 class="text-xl font-bold tracking-widest text-white">SILENT <span class="text-emerald-500">TECH</span></h1>
+            <div class="w-7 h-7 rounded bg-emerald-500 flex items-center justify-center font-bold text-black text-sm tracking-tighter">ST</div>
+            <h1 class="text-sm font-semibold tracking-widest text-white">SILENT TECH</h1>
         </div>
-        <div class="flex items-center space-x-2">
-            <span class="relative flex h-3 w-3">
+        <div class="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+            <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span class="text-sm text-gray-300">API Status: Operational</span>
+            <span class="text-xs font-medium text-emerald-400">System Operational</span>
         </div>
     </header>
 
-    <div class="marquee-container mt-8 z-10">
-        <div class="marquee-content" id="marquee1"></div>
-        <div class="marquee-content" id="marquee2"></div>
+    <!-- Marquee Hero -->
+    <div class="marquee-wrapper mt-20 z-10">
+        <div class="marquee-track" id="marquee1"></div>
+        <div class="marquee-track" id="marquee2"></div>
     </div>
 
-    <main class="flex-grow flex flex-col items-center z-10 px-4 py-8">
+    <main class="flex-grow flex flex-col items-center z-10 px-4 pb-24 w-full max-w-7xl mx-auto">
         
-        <div class="text-center mb-12 max-w-2xl">
-            <h2 class="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">The Ultimate Anime Gacha Engine</h2>
-            <p class="text-gray-400 text-lg">Secure, high-speed delivery of over 32,500 meticulously indexed characters. Built for enterprise-grade Discord & WhatsApp bots.</p>
+        <!-- Hero Text -->
+        <div class="text-center mb-10 max-w-3xl mt-4">
+            <h2 class="text-4xl md:text-6xl font-extrabold mb-5 tracking-tight text-white">
+                Enterprise <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">Gacha Delivery</span>
+            </h2>
+            <p class="text-gray-400 text-lg md:text-xl font-light">
+                Secure, high-speed routing for 32,500+ character assets.<br/> Designed specifically for production Discord & WhatsApp environments.
+            </p>
         </div>
 
-        <div class="flex space-x-2 mb-8 bg-black p-1 rounded-lg border border-white/10">
-            <button id="tab-docs" onclick="switchTab('docs')" class="px-6 py-2 rounded-md bg-white/10 text-white font-semibold transition-all">Documentation</button>
-            <button id="tab-test" onclick="switchTab('test')" class="px-6 py-2 rounded-md text-gray-400 hover:text-white font-semibold transition-all">Live Test Playground</button>
-        </div>
-
-        <!-- DOCUMENTATION TAB -->
-        <div id="content-docs" class="w-full max-w-4xl space-y-8 pb-20">
-            <div class="glass p-6">
-                <h3 class="text-2xl font-bold mb-2">Endpoint URL</h3>
-                <p class="text-gray-400 mb-4">Base URL for all requests.</p>
-                <div class="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden">
-                    <div class="flex px-4 py-2 bg-[#161b22] space-x-2 items-center border-b border-gray-800">
-                        <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-                        <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-                        <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-                        <span class="ml-2 text-xs text-gray-500 code-font">endpoint.txt</span>
-                    </div>
-                    <div class="p-4 code-font text-emerald-400 text-sm overflow-x-auto">
-                        GET https://shoob-database-api.vercel.app/api/card
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass p-6">
-                <h3 class="text-2xl font-bold mb-2">Authentication & Parameters</h3>
-                <table class="w-full text-left border-collapse mt-4">
-                    <thead>
-                        <tr class="border-b border-gray-700 text-gray-400 text-sm">
-                            <th class="py-2">Parameter</th>
-                            <th class="py-2">Type</th>
-                            <th class="py-2">Required</th>
-                            <th class="py-2">Description</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-sm">
-                        <tr class="border-b border-gray-800">
-                            <td class="py-3 code-font text-emerald-400">key</td>
-                            <td class="py-3 text-gray-400">String</td>
-                            <td class="py-3 text-red-400">Yes</td>
-                            <td class="py-3">Your private Silent Tech API key.</td>
-                        </tr>
-                        <tr class="border-b border-gray-800">
-                            <td class="py-3 code-font text-emerald-400">random</td>
-                            <td class="py-3 text-gray-400">Boolean</td>
-                            <td class="py-3 text-gray-400">No*</td>
-                            <td class="py-3">Set to <code class="bg-gray-800 px-1 rounded">true</code> to pull a random card.</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 code-font text-emerald-400">id</td>
-                            <td class="py-3 text-gray-400">String</td>
-                            <td class="py-3 text-gray-400">No*</td>
-                            <td class="py-3">Fetch a specific card. *Required if <code class="bg-gray-800 px-1 rounded">random</code> is not used.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Node.js Snippet -->
-                <div class="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden shadow-2xl">
-                    <div class="flex px-4 py-3 bg-[#161b22] space-x-2 items-center border-b border-gray-800">
-                        <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-                        <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-                        <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-                        <span class="ml-2 text-xs text-gray-400 code-font">bot.js (Node.js)</span>
-                    </div>
-                    <pre class="p-4 code-font text-xs text-gray-300 overflow-x-auto leading-relaxed">
-<span class="text-pink-400">const</span> axios = <span class="text-blue-300">require</span>(<span class="text-green-300">'axios'</span>);
-
-<span class="text-pink-400">async function</span> <span class="text-yellow-200">pullCard</span>() {
-  <span class="text-pink-400">try</span> {
-    <span class="text-pink-400">const</span> { data } = <span class="text-pink-400">await</span> axios.<span class="text-blue-300">get</span>(<span class="text-green-300">'https://shoob-database-api.vercel.app/api/card'</span>, {
-      <span class="text-blue-300">params</span>: { <span class="text-blue-300">random</span>: <span class="text-purple-400">true</span>, <span class="text-blue-300">key</span>: <span class="text-green-300">'SILENT_TECH_2026'</span> }
-    });
-    <span class="text-blue-300">console</span>.<span class="text-yellow-200">log</span>(data.name, data.tier);
-  } <span class="text-pink-400">catch</span> (err) { <span class="text-blue-300">console</span>.<span class="text-yellow-200">error</span>(err); }
-}</pre>
-                </div>
-
-                <!-- Python Snippet -->
-                <div class="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden shadow-2xl">
-                    <div class="flex px-4 py-3 bg-[#161b22] space-x-2 items-center border-b border-gray-800">
-                        <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-                        <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-                        <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-                        <span class="ml-2 text-xs text-gray-400 code-font">bot.py (Python)</span>
-                    </div>
-                    <pre class="p-4 code-font text-xs text-gray-300 overflow-x-auto leading-relaxed">
-<span class="text-pink-400">import</span> requests
-
-<span class="text-pink-400">def</span> <span class="text-yellow-200">pull_card</span>():
-    url = <span class="text-green-300">"https://shoob-database-api.vercel.app/api/card"</span>
-    params = {<span class="text-green-300">"random"</span>: <span class="text-green-300">"true"</span>, <span class="text-green-300">"key"</span>: <span class="text-green-300">"SILENT_TECH_2026"</span>}
-    
-    response = requests.<span class="text-blue-300">get</span>(url, params=params)
-    <span class="text-pink-400">if</span> response.status_code == <span class="text-purple-400">200</span>:
-        <span class="text-blue-300">print</span>(<span class="text-green-300">f"Pulled: {response.json()['name']}"</span>)</pre>
-                </div>
-            </div>
+        <!-- Navigation Tabs -->
+        <div class="flex p-1 bg-surface2 border border-white/10 rounded-lg mb-8 shadow-2xl">
+            <button id="tab-test" onclick="switchTab('test')" class="px-8 py-2.5 rounded-md bg-white/10 text-white font-medium text-sm transition-all shadow-sm">API Playground</button>
+            <button id="tab-docs" onclick="switchTab('docs')" class="px-8 py-2.5 rounded-md text-gray-400 hover:text-white font-medium text-sm transition-all">Documentation</button>
         </div>
 
         <!-- TEST PLAYGROUND TAB -->
-        <div id="content-test" class="w-full max-w-5xl hidden pb-20">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div id="content-test" class="w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                <div class="glass p-6 lg:col-span-1 h-fit">
-                    <h3 class="text-xl font-bold mb-4 flex items-center"><svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> Payload Setup</h3>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs text-gray-400 font-bold mb-1">API KEY</label>
-                            <input type="text" id="test-key" value="SILENT_TECH_2026" class="w-full bg-black border border-gray-700 rounded-md p-2 text-sm text-white focus:outline-none focus:border-emerald-500 code-font">
-                        </div>
+                <!-- Left Column: Controls -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="text-sm font-semibold text-white mb-5 uppercase tracking-wider flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Request Parameters
+                        </h3>
                         
-                        <div>
-                            <label class="block text-xs text-gray-400 font-bold mb-1">FETCH MODE</label>
-                            <select id="test-mode" onchange="toggleIdInput()" class="w-full bg-black border border-gray-700 rounded-md p-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                                <option value="random">Random Card (Gacha)</option>
-                                <option value="specific">Specific ID</option>
-                            </select>
-                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1.5">API KEY</label>
+                                <input type="password" id="test-key" value="SILENT_TECH_2026" class="w-full input-field rounded-lg p-2.5 text-sm text-white font-mono placeholder-gray-600">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1.5">ROUTING MODE</label>
+                                <div class="relative">
+                                    <select id="test-mode" onchange="toggleIdInput()" class="w-full input-field rounded-lg p-2.5 text-sm text-white appearance-none pr-10">
+                                        <option value="random">Randomize (Gacha Mode)</option>
+                                        <option value="specific">Target Specific ID</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div id="id-input-container" class="hidden">
-                            <label class="block text-xs text-gray-400 font-bold mb-1">CARD ID</label>
-                            <input type="text" id="test-id" placeholder="e.g. 60dd3dc06bc7..." class="w-full bg-black border border-gray-700 rounded-md p-2 text-sm text-white focus:outline-none focus:border-emerald-500 code-font">
-                        </div>
+                            <div id="id-input-container" class="hidden transition-all">
+                                <label class="block text-xs font-medium text-gray-400 mb-1.5">TARGET ID</label>
+                                <input type="text" id="test-id" placeholder="e.g. 61a7015099f..." class="w-full input-field rounded-lg p-2.5 text-sm text-white font-mono placeholder-gray-600">
+                            </div>
 
-                        <button onclick="executeTest()" id="execute-btn" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-md transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] flex justify-center items-center">
-                            <span>Execute Request</span>
-                        </button>
+                            <button onclick="executeTest()" id="execute-btn" class="w-full btn-primary text-white font-semibold py-3 rounded-lg flex justify-center items-center mt-2">
+                                <span>Initialize Request</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden shadow-2xl relative">
-                        <div class="flex px-4 py-3 bg-[#161b22] space-x-2 items-center border-b border-gray-800">
-                            <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-                            <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-                            <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-                            <span id="response-status" class="ml-2 text-xs text-gray-400 code-font">Waiting for request...</span>
+                <!-- Right Column: Response & Render -->
+                <div class="lg:col-span-8 flex flex-col space-y-6">
+                    
+                    <!-- Code Terminal -->
+                    <div class="glass-panel rounded-2xl overflow-hidden flex-grow flex flex-col border border-white/10 shadow-2xl relative">
+                        <div class="flex items-center px-4 py-3 bg-[#111111] border-b border-white/5">
+                            <div class="flex space-x-1.5 mr-4">
+                                <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                            </div>
+                            <span id="response-status" class="text-xs font-mono text-gray-500">Awaiting execution...</span>
+                            <div class="ml-auto text-xs font-mono text-gray-600">response.json</div>
                         </div>
-                        <pre id="json-result" class="p-6 code-font text-sm text-gray-300 overflow-x-auto min-h-[250px] max-h-[400px]">
+                        <div class="p-0 flex-grow relative bg-[#090909]">
+                            <pre id="json-result" class="p-5 font-mono text-sm text-gray-300 overflow-x-auto h-full min-h-[200px] leading-relaxed">
 {
-  "message": "System ready. Press Execute to initialize."
+  "status": "idle",
+  "message": "System ready."
 }</pre>
+                        </div>
                     </div>
 
-                    <div id="visual-render" class="glass p-6 hidden">
-                        <h3 class="text-sm font-bold text-gray-400 mb-4 tracking-widest uppercase">Visual Payload Render</h3>
-                        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                            <div class="w-48 h-72 rounded-lg border-2 border-white/10 overflow-hidden bg-black flex-shrink-0 relative">
-                                <img id="render-img" src="" onerror="this.src='https://dummyimage.com/400x600/0f172a/ef4444.png&text=Image+Missing'" class="w-full h-full object-cover">
-                                <div id="render-tier" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent p-3 pt-8 text-center font-black text-emerald-400 tracking-widest text-sm drop-shadow-md"></div>
+                    <!-- Visual Render (Hidden by default) -->
+                    <div id="visual-render" class="glass-panel rounded-2xl p-6 hidden animation-fade-in border border-white/10 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                            <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
+                        </div>
+                        
+                        <h3 class="text-xs font-semibold text-gray-400 mb-5 uppercase tracking-wider">Asset Render</h3>
+                        
+                        <div class="flex flex-col sm:flex-row gap-6 relative z-10">
+                            <!-- Card Image -->
+                            <div class="w-48 h-72 rounded-xl overflow-hidden bg-surface2 border border-white/10 shadow-2xl flex-shrink-0 relative group">
+                                <img id="render-img" src="" onerror="this.src='https://dummyimage.com/400x600/121212/ef4444.png&text=Load+Error'" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                                <div id="render-tier" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-3 text-center font-black text-emerald-400 tracking-widest text-sm"></div>
                             </div>
-                            <div class="flex flex-col justify-center w-full">
-                                <div class="text-xs text-emerald-500 font-bold tracking-widest mb-1 code-font" id="render-id"></div>
-                                <h2 class="text-3xl font-bold text-white mb-2" id="render-name"></h2>
-                                <p class="text-gray-400 text-lg mb-4" id="render-series"></p>
-                                <div class="inline-flex bg-white/5 border border-white/10 rounded-md px-3 py-1 w-fit text-sm text-gray-300">
-                                    Maker: <span class="text-white ml-1 font-semibold" id="render-maker"></span>
+                            
+                            <!-- Card Meta -->
+                            <div class="flex flex-col justify-center">
+                                <div class="text-xs text-emerald-500 font-mono mb-2" id="render-id"></div>
+                                <h2 class="text-3xl font-bold text-white mb-1" id="render-name"></h2>
+                                <p class="text-gray-400 text-lg mb-6" id="render-series"></p>
+                                
+                                <div class="flex items-center space-x-3">
+                                    <div class="bg-white/5 border border-white/10 rounded-lg px-4 py-2 flex items-center">
+                                        <span class="text-xs text-gray-500 uppercase tracking-wider mr-2">Maker</span>
+                                        <span class="text-sm font-semibold text-white" id="render-maker"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENTATION TAB -->
+        <div id="content-docs" class="w-full hidden pb-20">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Left: Endpoint Info -->
+                <div class="space-y-6">
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="text-xl font-bold text-white mb-2">Endpoint Setup</h3>
+                        <p class="text-sm text-gray-400 mb-5">Make a GET request to the primary Vercel API router.</p>
+                        
+                        <div class="bg-[#111] border border-white/10 rounded-lg p-4 font-mono text-sm flex items-center">
+                            <span class="text-emerald-400 font-bold mr-3">GET</span>
+                            <span class="text-gray-300 break-all">https://shoob-database-api.vercel.app/api/card</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="text-lg font-bold text-white mb-4">Query Parameters</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-start border-b border-white/5 pb-4">
+                                <div>
+                                    <code class="text-emerald-400 font-mono text-sm bg-emerald-400/10 px-2 py-0.5 rounded">key</code>
+                                    <p class="text-sm text-gray-400 mt-1">Authentication string.</p>
+                                </div>
+                                <span class="text-xs font-semibold text-red-400 bg-red-400/10 px-2 py-1 rounded">Required</span>
+                            </div>
+                            <div class="flex justify-between items-start border-b border-white/5 pb-4">
+                                <div>
+                                    <code class="text-emerald-400 font-mono text-sm bg-emerald-400/10 px-2 py-0.5 rounded">random</code>
+                                    <p class="text-sm text-gray-400 mt-1">Set to <code>true</code> for gacha pulls.</p>
+                                </div>
+                                <span class="text-xs font-semibold text-gray-500 bg-white/5 px-2 py-1 rounded">Optional</span>
+                            </div>
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <code class="text-emerald-400 font-mono text-sm bg-emerald-400/10 px-2 py-0.5 rounded">id</code>
+                                    <p class="text-sm text-gray-400 mt-1">Fetch a specific card asset.</p>
+                                </div>
+                                <span class="text-xs font-semibold text-gray-500 bg-white/5 px-2 py-1 rounded">Optional</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Code Snippets -->
+                <div class="space-y-6">
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/10">
+                        <div class="px-4 py-3 bg-[#111] border-b border-white/5 flex items-center justify-between">
+                            <span class="text-xs font-mono text-gray-400">Node.js / Discord Bot</span>
+                            <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M11.984 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0011.984 0zM8.9 19.5H7.5V11H5.4V9.6h3.5v9.9zm6.6-4.5c0 3-1.6 4.7-4 4.7-2.4 0-4-1.7-4-4.7v-1.1c0-3 1.6-4.7 4-4.7 2.4 0 4 1.7 4 4.7v1.1z"/></svg>
+                        </div>
+                        <pre class="p-5 font-mono text-xs text-gray-300 overflow-x-auto leading-loose bg-[#090909]">
+<span class="text-purple-400">const</span> axios = <span class="text-blue-400">require</span>(<span class="text-green-400">'axios'</span>);
+
+<span class="text-purple-400">async function</span> <span class="text-blue-300">pullCard</span>() {
+  <span class="text-purple-400">const</span> { data } = <span class="text-purple-400">await</span> axios.get(<span class="text-green-400">'https://shoob-database-api.vercel.app/api/card'</span>, {
+    params: { random: <span class="text-orange-400">true</span>, key: <span class="text-green-400">'SILENT_TECH_2026'</span> }
+  });
+  
+  console.log(<span class="text-green-400">`Pulled: ${data.name}`</span>);
+  console.log(<span class="text-green-400">`Image: ${data.image}`</span>); <span class="text-gray-500">// Auto-proxied URL</span>
+}</pre>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/10">
+                        <div class="px-4 py-3 bg-[#111] border-b border-white/5 flex items-center justify-between">
+                            <span class="text-xs font-mono text-gray-400">Python / WhatsApp Bot</span>
+                            <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M14.2 3.2h-4.4c-2.3 0-2.8.9-2.8 2.8v2.4h7.2v-1.2c0-1-.3-1.2-1.2-1.2zm2.6 6.8h-1.2v1.6c0 1.5-1.2 2.8-2.8 2.8H7.2v2.4c0 2.3.9 2.8 2.8 2.8h4.4c2.3 0 2.8-.9 2.8-2.8v-4.4c0-1.9-.5-2.4-2.8-2.4z"/></svg>
+                        </div>
+                        <pre class="p-5 font-mono text-xs text-gray-300 overflow-x-auto leading-loose bg-[#090909]">
+<span class="text-purple-400">import</span> requests
+
+<span class="text-purple-400">def</span> <span class="text-blue-300">pull_card</span>():
+    res = requests.get(<span class="text-green-400">"https://shoob-database-api.vercel.app/api/card"</span>, 
+        params={<span class="text-green-400">"random"</span>: <span class="text-green-400">"true"</span>, <span class="text-green-400">"key"</span>: <span class="text-green-400">"SILENT_TECH_2026"</span>}
+    )
+    data = res.json()
+    print(<span class="text-green-400">f"Pulled: {data['name']}"</span>)</pre>
                     </div>
                 </div>
             </div>
@@ -267,28 +304,26 @@
 
     </main>
 
-    <!-- JS Logic -->
+    <!-- JS Logic (Untouched core logic, just UI updates) -->
     <script>
+        // Sample Marquee Cards
         const sampleCards = [
-            { name: "Eren Yeager", series: "Attack on Titan", tier: "TIER 1", img: "https://api.shoob.gg/site/api/cardr/60a1b2c3d4e5f60017a8b9c0?size=small" },
-            { name: "Satoru Gojo", series: "Jujutsu Kaisen", tier: "TIER 1", img: "https://api.shoob.gg/site/api/cardr/603fe685c4946d0017e8011f?size=small" },
-            { name: "Ricardo Martinez", series: "Hajime no Ippo", tier: "TIER 3", img: "https://api.shoob.gg/site/api/cardr/60dd3dc06bc72012182c8169?size=small" },
-            { name: "Makima", series: "Chainsaw Man", tier: "TIER 1", img: "https://api.shoob.gg/site/api/cardr/5f8b2d18df41ab00178d8a7c?size=small" },
-            { name: "Guts", series: "Hajime no Ippo", tier: "TIER 2", img: "https://api.shoob.gg/site/api/cardr/5ec47b59e51b3a00175b2bb5?size=small" },
-            { name: "Tuesday", series: "Carole & Tuesday", tier: "TIER 4", img: "https://api.shoob.gg/site/api/cardr/5db4fae2b0edd623625d2ad2?size=small" }
+            { name: "Eren Yeager", series: "Attack on Titan", img: "https://cdn.shoob.gg/images/cards/2/resized/400_0185984c8a81699f43058862ecbeecaaeb6957a7eb2db04e9c6deabdfc5ba07f.png" },
+            { name: "Satoru Gojo", series: "Jujutsu Kaisen", img: "https://cdn.shoob.gg/images/cards/1/resized/400_e79979b0c9ca9a24ecfcceebc4da3491419409867b4588e3dbfecb13b7dcbfca.png" },
+            { name: "Makima", series: "Chainsaw Man", img: "https://cdn.shoob.gg/images/cards/1/resized/400_baabdd73edaa3856d252f9b8849b3c43714b9c1d1a87b8f60c5a1fb89eb2bc7d.png" },
+            { name: "Kakeru Ryuen", series: "Classroom of the Elite", img: "https://cdn.shoob.gg/images/cards/2/resized/400_37faeb862822d804701c6ae39696caf0c0f6c589a5439f1224a324742800aa92.png" },
+            { name: "Guts", series: "Berserk", img: "https://cdn.shoob.gg/images/cards/1/resized/400_cd2cd2713f0a4005b630dc65d6c8180373ab167dbbb09bd084c79c8828972ca8.png" }
         ];
 
-        // Because of <meta name="referrer" content="no-referrer"> we can now just use the raw links safely!
         function buildMarquee() {
             let html = "";
             sampleCards.forEach(c => {
                 html += `
-                <div class="flow-card">
-                    <img src="${c.img}" class="flow-img" onerror="this.style.display='none'">
-                    <div class="flow-text">
-                        <div class="flow-title">${c.name}</div>
-                        <div class="flow-sub">${c.series}</div>
-                        <div class="flow-tier">${c.tier}</div>
+                <div class="card-pill">
+                    <img src="${c.img}" onerror="this.style.display='none'">
+                    <div class="ml-3 mr-2">
+                        <div class="text-[0.8rem] font-bold text-white leading-tight">${c.name}</div>
+                        <div class="text-[0.65rem] text-gray-500 leading-tight">${c.series}</div>
                     </div>
                 </div>`;
             });
@@ -300,28 +335,33 @@
         function switchTab(tab) {
             document.getElementById('content-docs').classList.add('hidden');
             document.getElementById('content-test').classList.add('hidden');
-            document.getElementById('tab-docs').className = "px-6 py-2 rounded-md text-gray-400 hover:text-white font-semibold transition-all";
-            document.getElementById('tab-test').className = "px-6 py-2 rounded-md text-gray-400 hover:text-white font-semibold transition-all";
+            
+            document.getElementById('tab-docs').className = "px-8 py-2.5 rounded-md text-gray-400 hover:text-white font-medium text-sm transition-all";
+            document.getElementById('tab-test').className = "px-8 py-2.5 rounded-md text-gray-400 hover:text-white font-medium text-sm transition-all";
+            
             document.getElementById(`content-${tab}`).classList.remove('hidden');
-            document.getElementById(`tab-${tab}`).className = "px-6 py-2 rounded-md bg-white/10 text-white font-semibold transition-all";
+            document.getElementById(`tab-${tab}`).className = "px-8 py-2.5 rounded-md bg-white/10 text-white font-medium text-sm transition-all shadow-sm";
         }
 
         function toggleIdInput() {
             const mode = document.getElementById('test-mode').value;
-            if (mode === 'specific') document.getElementById('id-input-container').classList.remove('hidden');
-            else document.getElementById('id-input-container').classList.add('hidden');
+            if (mode === 'specific') {
+                document.getElementById('id-input-container').classList.remove('hidden');
+            } else {
+                document.getElementById('id-input-container').classList.add('hidden');
+            }
         }
 
         function syntaxHighlight(json) {
             if (typeof json != 'string') { json = JSON.stringify(json, undefined, 2); }
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                var cls = 'text-blue-400';
+                var cls = 'text-cyan-400'; // number
                 if (/^"/.test(match)) {
-                    if (/:$/.test(match)) { cls = 'text-pink-400'; }
-                    else { cls = 'text-green-300'; }
-                } else if (/true|false/.test(match)) { cls = 'text-purple-400'; }
-                else if (/null/.test(match)) { cls = 'text-gray-500'; }
+                    if (/:$/.test(match)) { cls = 'text-emerald-400 font-semibold'; } // key
+                    else { cls = 'text-gray-300'; } // string
+                } else if (/true|false/.test(match)) { cls = 'text-purple-400'; } // boolean
+                else if (/null/.test(match)) { cls = 'text-gray-500'; } // null
                 return '<span class="' + cls + '">' + match + '</span>';
             });
         }
@@ -337,41 +377,50 @@
             const cardId = document.getElementById('test-id').value;
 
             let url = window.location.origin + `/api/card?key=${encodeURIComponent(key)}`;
-            if (mode === 'random') { url += `&random=true`; } 
-            else {
-                if (!cardId) { jsonView.innerHTML = '<span class="text-red-400">Error: Please enter a Card ID.</span>'; return; }
+            if (mode === 'random') {
+                url += `&random=true`;
+            } else {
+                if (!cardId) {
+                    jsonView.innerHTML = '<span class="text-red-400">Error: Target ID is required.</span>';
+                    return;
+                }
                 url += `&id=${encodeURIComponent(cardId)}`;
             }
 
             url += `&t=${Date.now()}`;
 
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Fetching...`;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Executing Routing...`;
             visualRender.classList.add('hidden');
-            jsonView.innerHTML = '<span class="text-gray-500">Connecting...</span>';
-            statusText.innerText = "HTTP_REQ " + url;
+            jsonView.innerHTML = '<span class="text-gray-500">Connecting to API router...</span>';
+            statusText.innerText = "HTTP_REQ AWAITING";
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                statusText.innerHTML = response.ok ? `<span class="text-green-400">HTTP 200 OK</span>` : `<span class="text-red-400">HTTP ${response.status} ERROR</span>`;
+                statusText.innerHTML = response.ok 
+                    ? `<span class="text-emerald-400 font-bold">HTTP 200 OK</span>` 
+                    : `<span class="text-red-400 font-bold">HTTP ${response.status} ERROR</span>`;
+
                 jsonView.innerHTML = syntaxHighlight(data);
 
                 if (response.ok && data.image) {
-                    // Injecting raw image URL straight to the HTML
                     document.getElementById('render-img').src = data.image;
                     document.getElementById('render-name').innerText = data.name;
                     document.getElementById('render-series').innerText = data.series;
                     document.getElementById('render-tier').innerText = data.tier;
                     document.getElementById('render-maker').innerText = data.maker || 'Official';
                     document.getElementById('render-id').innerText = data.id;
+                    
                     visualRender.classList.remove('hidden');
                 }
+
             } catch (error) {
                 statusText.innerHTML = `<span class="text-red-400">NETWORK_ERROR</span>`;
                 jsonView.innerHTML = `<span class="text-red-400">${error.message}</span>`;
             }
-            btn.innerHTML = `<span>Execute Request</span>`;
+
+            btn.innerHTML = `<span>Initialize Request</span>`;
         }
     </script>
 </body>
