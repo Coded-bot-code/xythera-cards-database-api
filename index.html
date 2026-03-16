@@ -54,7 +54,7 @@
             transition: transform 0.3s;
         }
         .flow-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.1); }
-        .flow-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #222; }
+        .flow-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #111; }
         .flow-text { margin-left: 12px; }
         .flow-title { font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px;}
         .flow-sub { font-size: 0.7rem; color: #aaa; }
@@ -279,7 +279,7 @@
                         <h3 class="text-sm font-bold text-gray-400 mb-4 tracking-widest uppercase">Visual Payload Render</h3>
                         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                             <div class="w-48 h-72 rounded-lg border-2 border-white/10 overflow-hidden bg-black flex-shrink-0 relative">
-                                <img id="render-img" src="" class="w-full h-full object-cover">
+                                <img id="render-img" src="" onerror="this.src='https://dummyimage.com/400x600/0f172a/10b981.png&text=No+Image'" class="w-full h-full object-cover">
                                 <div id="render-tier" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent p-3 pt-8 text-center font-black text-emerald-400 tracking-widest text-sm drop-shadow-md"></div>
                             </div>
                             <div class="flex flex-col justify-center w-full">
@@ -299,16 +299,13 @@
 
     </main>
 
-        <!-- JS Logic -->
+    <!-- JS Logic -->
     <script>
-        // 🛡️ IMAGE PROXY BYPASS FUNCTION
-        // This forces all Shoob images through a proxy so they never get a 400 Bad Request!
+        // 🛡️ THE MASTER VERCEL PROXY BYPASS
+        // Routes the Shoob image through your newly created api/image.js file!
         function getSafeImage(url) {
-            if (!url) return 'https://i.ibb.co/30xZLXQ/default-pfp.jpg';
-            // If it's already using a proxy, return it.
-            if (url.includes('weserv.nl')) return url;
-            // Otherwise, wrap the Shoob URL in the bypass proxy.
-            return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&output=webp`;
+            if (!url) return 'https://dummyimage.com/400x600/0f172a/10b981.png&text=No+Image';
+            return window.location.origin + `/api/image?url=${encodeURIComponent(url)}`;
         }
 
         // Sample cards for the flowing marquee
@@ -321,14 +318,14 @@
             { name: "Tuesday", series: "Carole & Tuesday", tier: "TIER 4", img: "https://api.shoob.gg/site/api/cardr/5db4fae2b0edd623625d2ad2?size=small" }
         ];
 
-        // Populate Marquee
+        // Populate Marquee (Now using the Custom Proxy for images!)
         function buildMarquee() {
             let html = "";
             sampleCards.forEach(c => {
                 const safeImg = getSafeImage(c.img);
                 html += `
                 <div class="flow-card">
-                    <img src="${safeImg}" class="flow-img" onerror="this.src='https://i.ibb.co/30xZLXQ/default-pfp.jpg'">
+                    <img src="${safeImg}" class="flow-img" onerror="this.src='https://dummyimage.com/100x100/0f172a/10b981.png&text=X'">
                     <div class="flow-text">
                         <div class="flow-title">${c.name}</div>
                         <div class="flow-sub">${c.series}</div>
@@ -419,9 +416,8 @@
                 // Display JSON
                 jsonView.innerHTML = syntaxHighlight(data);
 
-                // If success and has image, display Visual Render
+                // If success and has image, display Visual Render using PROXY!
                 if (response.ok && data.image) {
-                    // Use the proxy bypass to load the image safely in the HTML!
                     document.getElementById('render-img').src = getSafeImage(data.image);
                     
                     document.getElementById('render-name').innerText = data.name;
