@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { HttpsProxyAgent } = require('https-proxy-agent');
+const https = require('https');
 
 const proxies = [
     "http://daknlrlb:sfpf7jrfkxta@31.59.20.176:6754",
@@ -15,49 +16,77 @@ const proxies = [
 ];
 
 export default async function handler(req, res) {
-    const { id } = req.query;
+    const { id, debug } = req.query;
     if (!id) return res.status(400).send("No ID");
 
     const targetUrl = `https://api.shoob.gg/site/api/cardr/${id}?size=400`;
+    let debugLogs = [];
 
     for (let i = 0; i < 3; i++) {
         const randomProxy = proxies[Math.floor(Math.random() * proxies.length)];
         const agent = new HttpsProxyAgent(randomProxy);
+        
+        let attemptLog = { 
+            attempt: i + 1, 
+            proxy_ip: randomProxy.split('@')[1], // Hides your password in the logs
+            status: null,
+            error: null,
+            time_ms: 0
+        };
 
         try {
-            // Tell Axios to grab the raw data, and accept BOTH 200 (Image) and 302 (Redirect)
+            const start = Date.now();
+            
+            // Allow all status codes to pass so we can read them instead of crashing
             const response = await axios.get(targetUrl, {
                 httpsAgent: agent,
                 maxRedirects: 0, 
-                responseType: 'arraybuffer', // Ready to catch the image buffer!
-                timeout: 6000, 
-                validateStatus: status => status >= 200 && status <= 308,
+                responseType: 'arraybuffer',
+                timeout: 5000, 
+                validateStatus: () => true, // Don't throw errors on 403s or 500s
                 headers: { 
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': '*/*',
                     'Referer': 'https://shoob.gg/'
                 }
             });
 
-            // SCENARIO 1: Shoob hands us a redirect to the CDN
-            if (response.status >= 300 && response.headers.location) {
-                res.setHeader('Cache-Control', 'public, max-age=2592000');
-                return res.redirect(302, response.headers.location);
+            attemptLog.time_ms = Date.now() - start;
+            attemptLog.status = response.status;
+            
+            // If Shoob gave us a redirect location, log it
+            if (response.headers.location) {
+                attemptLog.redirect_url = response.headers.location;
             }
 
-            // SCENARIO 2: Shoob hands us the image file directly
-            if (response.status === 200) {
-                res.setHeader('Cache-Control', 'public, max-age=2592000');
-                res.setHeader('Content-Type', response.headers['content-type'] || 'image/png');
-                return res.status(200).send(Buffer.from(response.data));
+            debugLogs.push(attemptLog);
+
+            // If we are NOT in debug mode, try to serve the image normally
+            if (debug !== 'true') {
+                if (response.status >= 300 && response.status <= 308 && response.headers.location) {
+                    return res.redirect(302, response.headers.location);
+                }
+                if (response.status === 200) {
+                    res.setHeader('Content-Type', response.headers['content-type'] || 'image/png');
+                    return res.status(200).send(Buffer.from(response.data));
+                }
             }
 
         } catch (err) {
-            console.error(`Proxy ${randomProxy} failed. Retrying...`);
-            continue; 
+            attemptLog.error = err.code || err.message;
+            debugLogs.push(attemptLog);
         }
     }
 
-    // Failsafe if everything burns down
-    res.redirect(302, 'https://dummyimage.com/400x600/0f172a/ef4444.png&text=Proxy+Failed');
+    // 🔴 IF DEBUG MODE IS ON, OR IF EVERYTHING FAILS, PRINT THE DIAGNOSTICS:
+    if (debug === 'true') {
+        return res.status(200).json({
+            message: "Diagnostics Complete",
+            target_url: targetUrl,
+            logs: debugLogs
+        });
+    }
+
+    // If it fails normally, show a visual error on the site
+    res.redirect(302, 'https://dummyimage.com/400x600/0f172a/ef4444.png&text=Check+Debug+Logs');
 }
