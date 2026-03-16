@@ -1,6 +1,5 @@
-const axios = require('axios');
-const { HttpsProxyAgent } = require('https-proxy-agent');
-const https = require('https');
+import axios from 'axios';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 const proxies = [
     "http://daknlrlb:sfpf7jrfkxta@31.59.20.176:6754",
@@ -19,6 +18,7 @@ export default async function handler(req, res) {
     const { id, debug } = req.query;
     if (!id) return res.status(400).send("No ID");
 
+    // Notice we are using ?size=400 as you brilliantly pointed out earlier!
     const targetUrl = `https://api.shoob.gg/site/api/cardr/${id}?size=400`;
     let debugLogs = [];
 
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
         
         let attemptLog = { 
             attempt: i + 1, 
-            proxy_ip: randomProxy.split('@')[1], // Hides your password in the logs
+            proxy_ip: randomProxy.split('@')[1], 
             status: null,
             error: null,
             time_ms: 0
@@ -37,13 +37,12 @@ export default async function handler(req, res) {
         try {
             const start = Date.now();
             
-            // Allow all status codes to pass so we can read them instead of crashing
             const response = await axios.get(targetUrl, {
                 httpsAgent: agent,
                 maxRedirects: 0, 
                 responseType: 'arraybuffer',
                 timeout: 5000, 
-                validateStatus: () => true, // Don't throw errors on 403s or 500s
+                validateStatus: () => true, 
                 headers: { 
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                     'Accept': '*/*',
@@ -54,14 +53,12 @@ export default async function handler(req, res) {
             attemptLog.time_ms = Date.now() - start;
             attemptLog.status = response.status;
             
-            // If Shoob gave us a redirect location, log it
             if (response.headers.location) {
                 attemptLog.redirect_url = response.headers.location;
             }
 
             debugLogs.push(attemptLog);
 
-            // If we are NOT in debug mode, try to serve the image normally
             if (debug !== 'true') {
                 if (response.status >= 300 && response.status <= 308 && response.headers.location) {
                     return res.redirect(302, response.headers.location);
@@ -78,7 +75,6 @@ export default async function handler(req, res) {
         }
     }
 
-    // 🔴 IF DEBUG MODE IS ON, OR IF EVERYTHING FAILS, PRINT THE DIAGNOSTICS:
     if (debug === 'true') {
         return res.status(200).json({
             message: "Diagnostics Complete",
@@ -87,6 +83,5 @@ export default async function handler(req, res) {
         });
     }
 
-    // If it fails normally, show a visual error on the site
-    res.redirect(302, 'https://dummyimage.com/400x600/0f172a/ef4444.png&text=Check+Debug+Logs');
+    res.redirect(302, 'https://dummyimage.com/400x600/0f172a/ef4444.png&text=Proxy+Failed');
 }
