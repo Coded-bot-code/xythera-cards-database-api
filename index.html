@@ -2,251 +2,215 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer" />
-    <title>Silent Tech | Terminal</title>
+    <title>Silent Tech | API</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --term-green: #00ff41;
-            --term-dark: #050505;
-            --term-dim: #003300;
-        }
-        
         body { 
-            background-color: var(--term-dark); 
-            color: var(--term-green); 
-            font-family: 'JetBrains Mono', monospace; 
+            background-color: #0c0c0c; 
+            color: #ececec; 
+            font-family: 'Inter', sans-serif;
             overflow-x: hidden;
         }
 
-        /* Hacker CRT Scanline Effect */
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%; z-index: 50; pointer-events: none;
+        /* Clean Professional Grey Grid */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: -1;
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
         }
 
-        /* Screen Flicker */
-        .screen-flicker { animation: flicker 0.15s infinite; pointer-events: none; opacity: 0.95; }
-        @keyframes flicker { 0% { opacity: 0.98; } 50% { opacity: 0.95; } 100% { opacity: 0.99; } }
-
-        /* Terminal Box Styling */
-        .term-box {
-            background: rgba(0, 10, 0, 0.8);
-            border: 1px solid var(--term-green);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.1) inset;
-            position: relative;
+        /* macOS Style Window Structure */
+        .mac-window {
+            background: #151515;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
-        
-        /* Terminal Input styling */
-        .term-input {
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid var(--term-dim);
-            color: var(--term-green);
-            width: 100%;
+        .mac-header {
+            background: #1e1e1e;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+        }
+        .mac-dots { display: flex; gap: 6px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background-color: #ff5f56; }
+        .dot-yellow { background-color: #ffbd2e; }
+        .dot-green { background-color: #27c93f; }
+        .mac-title { flex: 1; text-align: center; font-size: 12px; color: #888; font-weight: 500; margin-right: 48px;}
+
+        /* Smooth Inputs */
+        .input-clean {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-clean:focus {
             outline: none;
-            border-radius: 0;
-            transition: all 0.2s;
+            border-color: #666;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
         }
-        .term-input:focus { border-bottom: 1px solid var(--term-green); box-shadow: 0 2px 5px rgba(0,255,65,0.2); }
 
-        /* Blinking Cursor */
-        .cursor { display: inline-block; width: 8px; height: 1em; background-color: var(--term-green); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 4px; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        /* Text Glow */
-        .glow-text { text-shadow: 0 0 5px rgba(0, 255, 65, 0.5); }
-
-        /* Typing Animation class for JS */
-        .typing-line { overflow: hidden; white-space: nowrap; border-right: 2px solid var(--term-green); animation: type 1s steps(40, end), blink-caret .5s step-end infinite alternate; }
-        @keyframes type { from { width: 0 } to { width: 100% } }
-
-        /* Smooth Marquee (Scaled down for mobile) */
-        .marquee-wrapper { display: flex; overflow: hidden; gap: 1rem; padding: 1rem 0; border-bottom: 1px dashed var(--term-dim); border-top: 1px dashed var(--term-dim); }
-        .marquee-track { display: flex; flex-shrink: 0; align-items: center; gap: 1rem; animation: scroll 20s linear infinite; }
-        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(calc(-100% - 1rem)); } }
+        /* Subtle Smooth Animations */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: var(--term-dark); border-left: 1px solid var(--term-dim); }
-        ::-webkit-scrollbar-thumb { background: var(--term-green); }
-        
-        /* Formatter for JSON */
-        .json-key { color: #00ff41; font-weight: bold; }
-        .json-string { color: #88ff88; }
-        .json-number { color: #ff0055; }
-        .json-boolean { color: #ffff00; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Code Font */
+        .code-font { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body class="screen-flicker text-xs md:text-sm">
+<body class="antialiased min-h-screen flex flex-col items-center py-10 px-4 md:px-8">
 
-    <div class="scanlines"></div>
+    <div class="bg-grid"></div>
 
-    <!-- Terminal Header -->
-    <header class="w-full p-4 border-b border-[#00ff41] bg-[#020a02] flex justify-between items-center z-10 sticky top-0">
-        <div class="flex items-center space-x-2">
-            <span class="font-bold glow-text">root@silent-tech:~#</span>
-            <span class="text-[10px] md:text-xs text-gray-500 hidden sm:inline"> ./gacha_engine.sh</span>
-        </div>
-        <div class="flex items-center space-x-2 border border-[#00ff41] px-2 py-1 bg-[#002200]">
-            <span class="w-2 h-2 bg-[#00ff41] animate-pulse"></span>
-            <span class="text-[10px] uppercase tracking-widest font-bold">Sys: ONLINE</span>
-        </div>
-    </header>
-
-    <!-- Data Stream Marquee -->
-    <div class="marquee-wrapper bg-[#010501]">
-        <div class="marquee-track" id="marquee1"></div>
-        <div class="marquee-track" id="marquee2"></div>
+    <!-- Minimal Header -->
+    <div class="max-w-5xl w-full mb-10 text-center">
+        <h1 class="text-3xl font-semibold text-white tracking-tight mb-2">Silent Tech</h1>
+        <p class="text-gray-400 text-sm font-medium">Enterprise Image Routing & Delivery API</p>
     </div>
 
-    <main class="flex-grow flex flex-col z-10 p-3 md:p-6 w-full max-w-6xl mx-auto">
+    <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 z-10">
         
-        <!-- Hero -->
-        <div class="mb-6 md:mb-10 mt-2">
-            <h2 class="text-xl md:text-3xl font-bold uppercase tracking-widest glow-text">
-                > Gacha_Delivery_System<span class="cursor"></span>
-            </h2>
-            <p class="text-gray-400 text-[10px] md:text-xs mt-2 uppercase">Connecting to secure database... [32,535 records loaded]</p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
-            
-            <!-- Left Column: Controls -->
-            <div class="lg:col-span-4 space-y-4">
-                <div class="term-box p-4 md:p-5">
-                    <div class="border-b border-[#00ff41] pb-2 mb-4 flex justify-between items-center">
-                        <span class="uppercase tracking-widest font-bold text-[10px] md:text-xs">Parameters</span>
-                        <span class="text-[10px] text-gray-500">[RW]</span>
+        <!-- Left Panel: Controls -->
+        <div class="md:col-span-5 flex flex-col gap-6">
+            <div class="mac-window">
+                <div class="mac-header">
+                    <div class="mac-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="mac-title">request_config.json</div>
+                </div>
+                
+                <div class="p-6 space-y-5">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Authentication Key</label>
+                        <input type="password" id="test-key" value="SILENT_TECH_2026" class="w-full input-clean p-2.5 text-sm code-font">
                     </div>
                     
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-[10px] uppercase text-gray-400 mb-1">> set_api_key</label>
-                            <input type="password" id="test-key" value="SILENT_TECH_2026" class="term-input py-1 text-xs">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] uppercase text-gray-400 mb-1">> set_routing_mode</label>
-                            <select id="test-mode" onchange="toggleIdInput()" class="term-input py-1 text-xs appearance-none">
-                                <option value="random">--MODE_GACHA (Random)</option>
-                                <option value="specific">--MODE_TARGET (Specific ID)</option>
-                            </select>
-                        </div>
-
-                        <div id="id-input-container" class="hidden">
-                            <label class="block text-[10px] uppercase text-gray-400 mb-1">> set_target_id</label>
-                            <input type="text" id="test-id" placeholder="Enter Hash ID..." class="term-input py-1 text-xs">
-                        </div>
-
-                        <button onclick="executeTest()" id="execute-btn" class="w-full mt-4 border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-black font-bold py-2 text-xs uppercase transition-colors duration-200">
-                            [ Execute_Payload ]
-                        </button>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Fetch Mode</label>
+                        <select id="test-mode" onchange="toggleIdInput()" class="w-full input-clean p-2.5 text-sm cursor-pointer">
+                            <option value="random">Randomize (Gacha Pull)</option>
+                            <option value="specific">Target Specific ID</option>
+                        </select>
                     </div>
+
+                    <div id="id-input-container" class="hidden fade-in">
+                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Target Asset ID</label>
+                        <input type="text" id="test-id" placeholder="e.g. 61a7015099f..." class="w-full input-clean p-2.5 text-sm code-font">
+                    </div>
+
+                    <button onclick="executeTest()" id="execute-btn" class="w-full bg-[#ececec] hover:bg-white text-black font-semibold py-2.5 rounded-lg transition-colors mt-2 text-sm">
+                        Execute Request
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Output & Render -->
+        <div class="md:col-span-7 flex flex-col gap-6">
+            
+            <!-- Code Window -->
+            <div class="mac-window h-fit">
+                <div class="mac-header">
+                    <div class="mac-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="mac-title" id="response-status">Waiting for request...</div>
+                </div>
+                <div class="p-0 bg-[#0a0a0a]">
+                    <pre id="json-result" class="p-5 code-font text-sm text-gray-300 overflow-x-auto min-h-[160px] leading-relaxed">
+{
+  "status": "idle",
+  "connection": "ready"
+}</pre>
                 </div>
             </div>
 
-            <!-- Right Column: Console Output -->
-            <div class="lg:col-span-8 flex flex-col space-y-4">
-                
-                <!-- Code Terminal -->
-                <div class="term-box flex-grow flex flex-col h-full min-h-[250px]">
-                    <div class="px-3 py-1 border-b border-[#00ff41] bg-[#001100] flex items-center justify-between">
-                        <span class="text-[10px] uppercase">Stdout // API_Response</span>
-                        <span id="response-status" class="text-[10px] text-gray-500">IDLE</span>
+            <!-- Image Render Window -->
+            <div id="visual-render" class="mac-window hidden fade-in">
+                <div class="mac-header border-b border-[#2a2a2a]/50 bg-[#151515]">
+                    <div class="mac-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
                     </div>
-                    <div class="p-4 flex-grow overflow-x-auto">
-                        <pre id="json-result" class="text-[10px] md:text-xs leading-relaxed text-gray-400">System ready. Awaiting command...</pre>
-                    </div>
+                    <div class="mac-title">asset_preview.png</div>
                 </div>
-
-                <!-- Visual Render Box -->
-                <div id="visual-render" class="term-box p-4 hidden">
-                    <div class="border-b border-[#00ff41] pb-2 mb-4">
-                        <span class="uppercase tracking-widest font-bold text-[10px] md:text-xs text-white">Visual_Decryption_Complete</span>
+                
+                <div class="p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start bg-[#111]">
+                    <!-- Image -->
+                    <div class="w-40 h-60 rounded-lg overflow-hidden border border-[#333] shadow-lg flex-shrink-0 bg-[#0a0a0a]">
+                        <img id="render-img" src="" class="w-full h-full object-cover">
                     </div>
                     
-                    <div class="flex flex-col sm:flex-row gap-4 items-start">
-                        <!-- Image -->
-                        <div class="w-24 h-36 md:w-36 md:h-52 border border-[#00ff41] p-1 flex-shrink-0 relative bg-black">
-                            <img id="render-img" src="" class="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-500">
-                            <!-- Scanning line over image -->
-                            <div class="absolute top-0 left-0 w-full h-[2px] bg-[#00ff41] opacity-50 animate-[scan_2s_linear_infinite]"></div>
-                        </div>
+                    <!-- Metadata -->
+                    <div class="flex flex-col w-full py-2">
+                        <div class="text-[11px] text-gray-500 code-font mb-1" id="render-id"></div>
+                        <h2 class="text-2xl font-semibold text-white mb-1" id="render-name"></h2>
+                        <p class="text-sm text-gray-400 mb-5" id="render-series"></p>
                         
-                        <!-- Data -->
-                        <div class="flex flex-col space-y-1 md:space-y-2 w-full">
-                            <div class="text-[8px] md:text-[10px] text-gray-500">ID: <span id="render-id" class="text-[#00ff41]"></span></div>
-                            <h2 class="text-base md:text-xl font-bold glow-text text-white uppercase" id="render-name"></h2>
-                            <p class="text-[10px] md:text-xs text-gray-400 uppercase" id="render-series"></p>
-                            
-                            <div class="mt-2 grid grid-cols-2 gap-2 text-[10px] border-t border-dashed border-[#003300] pt-2">
-                                <div><span class="text-gray-500">TIER:</span> <span id="render-tier" class="font-bold text-[#00ff41]"></span></div>
-                                <div><span class="text-gray-500">MAKER:</span> <span id="render-maker" class="font-bold text-white"></span></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-[#1a1a1a] rounded border border-[#2a2a2a] p-3">
+                                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Tier</div>
+                                <div class="text-sm font-medium text-white" id="render-tier"></div>
+                            </div>
+                            <div class="bg-[#1a1a1a] rounded border border-[#2a2a2a] p-3">
+                                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Maker</div>
+                                <div class="text-sm font-medium text-white" id="render-maker"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
+
         </div>
     </main>
 
-    <style>
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-    </style>
-
     <script>
-        const sampleCards = [
-            { name: "EREN", img: "https://cdn.shoob.gg/images/cards/2/resized/400_0185984c8a81699f43058862ecbeecaaeb6957a7eb2db04e9c6deabdfc5ba07f.png" },
-            { name: "GOJO", img: "https://cdn.shoob.gg/images/cards/1/resized/400_e79979b0c9ca9a24ecfcceebc4da3491419409867b4588e3dbfecb13b7dcbfca.png" },
-            { name: "MAKIMA", img: "https://cdn.shoob.gg/images/cards/1/resized/400_baabdd73edaa3856d252f9b8849b3c43714b9c1d1a87b8f60c5a1fb89eb2bc7d.png" },
-            { name: "GUTS", img: "https://cdn.shoob.gg/images/cards/1/resized/400_cd2cd2713f0a4005b630dc65d6c8180373ab167dbbb09bd084c79c8828972ca8.png" }
-        ];
-
-        function buildMarquee() {
-            let html = "";
-            sampleCards.forEach(c => {
-                html += `
-                <div class="flex items-center border border-[#003300] p-1 pr-3 bg-black">
-                    <img src="${c.img}" class="w-6 h-6 object-cover border border-[#00ff41] mr-2 grayscale">
-                    <span class="text-[8px] tracking-widest">${c.name}</span>
-                </div>`;
-            });
-            document.getElementById('marquee1').innerHTML = html;
-            document.getElementById('marquee2').innerHTML = html;
-        }
-        buildMarquee();
-
         function toggleIdInput() {
             const mode = document.getElementById('test-mode').value;
-            if (mode === 'specific') document.getElementById('id-input-container').classList.remove('hidden');
-            else document.getElementById('id-input-container').classList.add('hidden');
+            if (mode === 'specific') {
+                document.getElementById('id-input-container').classList.remove('hidden');
+            } else {
+                document.getElementById('id-input-container').classList.add('hidden');
+            }
         }
 
         function syntaxHighlight(json) {
             if (typeof json != 'string') { json = JSON.stringify(json, undefined, 2); }
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                var cls = 'json-number';
+                var cls = 'text-[#79c0ff]'; // number
                 if (/^"/.test(match)) {
-                    if (/:$/.test(match)) { cls = 'json-key'; }
-                    else { cls = 'json-string'; }
-                } else if (/true|false/.test(match)) { cls = 'json-boolean'; }
+                    if (/:$/.test(match)) { cls = 'text-[#d2a8ff] font-medium'; } // key
+                    else { cls = 'text-[#a5d6ff]'; } // string
+                } else if (/true|false/.test(match)) { cls = 'text-[#ff7b72]'; } // boolean
+                else if (/null/.test(match)) { cls = 'text-gray-500'; } // null
                 return '<span class="' + cls + '">' + match + '</span>';
             });
-        }
-
-        // Terminal text typing effect for status
-        async function typeText(element, text, speed = 20) {
-            element.innerHTML = "";
-            for(let i = 0; i < text.length; i++) {
-                element.innerHTML += text.charAt(i);
-                await new Promise(r => setTimeout(r, speed));
-            }
         }
 
         async function executeTest() {
@@ -260,24 +224,28 @@
             const cardId = document.getElementById('test-id').value;
 
             let url = window.location.origin + `/api/card?key=${encodeURIComponent(key)}`;
-            if (mode === 'random') url += `&random=true`;
-            else {
-                if (!cardId) { jsonView.innerHTML = '<span class="text-red-500">ERR: TARGET_ID_MISSING</span>'; return; }
+            if (mode === 'random') {
+                url += `&random=true`;
+            } else {
+                if (!cardId) {
+                    jsonView.innerHTML = '<span class="text-[#ff7b72]">Error: Target ID is required.</span>';
+                    return;
+                }
                 url += `&id=${encodeURIComponent(cardId)}`;
             }
             url += `&t=${Date.now()}`;
 
-            // Terminal Boot Sequence Animation
-            btn.innerText = "[ PROCESSING... ]";
+            btn.innerText = "Processing...";
+            btn.classList.add('opacity-70');
             visualRender.classList.add('hidden');
-            statusText.innerText = "HTTP_REQ_INIT";
-            await typeText(jsonView, "INITIALIZING CONNECTION...\nBYPASSING FIREWALL...\nROUTING THROUGH PROXY NET...\nFETCHING ASSET...", 15);
+            jsonView.innerHTML = '<span class="text-gray-500">Fetching data...</span>';
+            statusText.innerText = "GET /api/card";
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                statusText.innerHTML = response.ok ? `[200 OK]` : `<span class="text-red-500">[${response.status} ERR]</span>`;
+                statusText.innerText = response.ok ? `Status: 200 OK` : `Status: ${response.status} ERROR`;
                 jsonView.innerHTML = syntaxHighlight(data);
 
                 if (response.ok && data.image) {
@@ -285,18 +253,22 @@
                     document.getElementById('render-name').innerText = data.name;
                     document.getElementById('render-series').innerText = data.series;
                     document.getElementById('render-tier').innerText = data.tier;
-                    document.getElementById('render-maker').innerText = data.maker || 'OFFICIAL';
+                    document.getElementById('render-maker').innerText = data.maker || 'Official';
                     document.getElementById('render-id').innerText = data.id;
                     
-                    visualRender.classList.remove('hidden');
+                    // Smooth reveal
+                    setTimeout(() => {
+                        visualRender.classList.remove('hidden');
+                    }, 100);
                 }
 
             } catch (error) {
-                statusText.innerHTML = `<span class="text-red-500">[NET_ERR]</span>`;
-                jsonView.innerHTML = `<span class="text-red-500">FATAL ERROR: ${error.message}</span>`;
+                statusText.innerText = `NETWORK_ERROR`;
+                jsonView.innerHTML = `<span class="text-[#ff7b72]">${error.message}</span>`;
             }
 
-            btn.innerText = "[ Execute_Payload ]";
+            btn.innerText = "Execute Request";
+            btn.classList.remove('opacity-70');
         }
     </script>
 </body>
