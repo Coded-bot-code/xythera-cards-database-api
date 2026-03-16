@@ -1,36 +1,47 @@
-const database = require('../master_database.json');
-
-const dbMap = {};
-database.forEach(card => {
-    dbMap[card.id] = card;
-});
-
-const SECRET_KEY = "SILENT_TECH_2026"; 
+const fs = require('fs');
+const path = require('path');
 
 export default function handler(req, res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    const { key, random, id } = req.query;
     
-    const { id, key, random } = req.query;
-
-    if (key !== SECRET_KEY) {
-        return res.status(401).json({ error: "❌ Access Denied: Invalid Silent Tech API Key" });
+    // Auth Check
+    if (key !== 'SILENT_TECH_2026') {
+        return res.status(401).json({ error: "Unauthorized API Key" });
     }
 
-    let card = null;
+    try {
+        // Load your 13-hour database
+        const dbPath = path.join(process.cwd(), 'master_database.json');
+        const rawData = fs.readFileSync(dbPath, 'utf8');
+        const cards = JSON.parse(rawData);
 
-    if (random === 'true') {
-        const randomIndex = Math.floor(Math.random() * database.length);
-        card = database[randomIndex];
-    } else if (id) {
-        card = dbMap[id];
-    } else {
-        return res.status(400).json({ error: "❌ Error: Please provide a Card ID or set random=true" });
-    }
+        let selectedCard = null;
 
-    if (card) {
-        // Return the RAW Shoob URL. Your WhatsApp bot will use this natively!
-        res.status(200).json(card);
-    } else {
-        res.status(404).json({ error: "Card not found in Silent Tech Database" });
+        // Pick card
+        if (random === 'true') {
+            selectedCard = cards[Math.floor(Math.random() * cards.length)];
+        } else if (id) {
+            selectedCard = cards.find(c => c.card_id === id);
+        }
+
+        if (!selectedCard) {
+            return res.status(404).json({ error: "Card not found" });
+        }
+
+        // MAGIC TRICK: Route the image through YOUR Vercel Proxy instead of Shoob directly
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const host = req.headers.host;
+        const proxyImageUrl = `${protocol}://${host}/api/image?id=${selectedCard.card_id}`;
+
+        res.status(200).json({
+            id: selectedCard.card_id,
+            name: selectedCard.character || "Unknown",
+            image: proxyImageUrl, // 👈 Your WhatsApp bot will hit this URL
+            original_url: selectedCard.image_url
+        });
+
+    } catch (error) {
+        console.error("DB Error:", error);
+        res.status(500).json({ error: "Database error" });
     }
 }
