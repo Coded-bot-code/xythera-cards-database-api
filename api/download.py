@@ -32,7 +32,7 @@ class handler(BaseHTTPRequestHandler):
 
         if not url:
             self._send_json(400, {
-                "creator": "Muhammad Zarar",
+                "creator": "XYTHERA",
                 "status": 400,
                 "success": False,
                 "error": "No URL provided. Use ?url=YOUTUBE_URL"
@@ -66,7 +66,7 @@ class handler(BaseHTTPRequestHandler):
                 quality = f"{height}p" if height else info.get('format_note', 'Best')
 
             self._send_json(200, {
-                "creator": "Muhammad Zarar",
+                "creator": "XYTHERA",
                 "status": 200,
                 "success": True,
                 "result": {
@@ -80,7 +80,7 @@ class handler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json(500, {
-                "creator": "Muhammad Zarar",
+                "creator": "XYTHERA",
                 "status": 500,
                 "success": False,
                 "error": str(e)
