@@ -4,7 +4,7 @@ import path from 'path';
 export default function handler(req, res) {
     const { key, random, id } = req.query;
     
-    if (key !== 'SILENT_TECH_2026') {
+    if (key !== 'XYTHERA_API') {
         return res.status(401).json({ error: "Unauthorized API Key" });
     }
 
