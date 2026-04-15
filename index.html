@@ -624,6 +624,14 @@ if (isGif) {
 
                     setTimeout(() => visualRender.classList.remove('hidden'), 100);
 
+// After setting data.tier
+const gifBadge = document.getElementById('gif-badge');
+if (data.tier === 'TIER S' || data.tier === 'TIER 6') {
+    gifBadge.classList.remove('hidden');
+} else {
+    gifBadge.classList.add('hidden');
+}
+
                     // Increment local usage and save
                     localUsage += 1;
                     localStorage.setItem('xythera_usage', localUsage);
