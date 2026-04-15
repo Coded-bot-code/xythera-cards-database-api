@@ -622,17 +622,19 @@ if (isGif) {
                     document.getElementById('render-series').innerText = data.series;
                     document.getElementById('render-tier').innerText = data.tier;
                     document.getElementById('render-maker').innerText = data.maker || 'Official';
-                    document.getElementById('render-id').innerText = data.id;
+                   
+// Show/hide GIF badge
+const gifBadge = document.getElementById('gif-badge');
+if (gifBadge) {
+    if (data.tier === 'TIER S' || data.tier === 'TIER 6') {
+        gifBadge.classList.remove('hidden');
+    } else {
+        gifBadge.classList.add('hidden');
+    }
+}
+ document.getElementById('render-id').innerText = data.id;
 
                     setTimeout(() => visualRender.classList.remove('hidden'), 100);
-
-// After setting data.tier
-const gifBadge = document.getElementById('gif-badge');
-if (data.tier === 'TIER S' || data.tier === 'TIER 6') {
-    gifBadge.classList.remove('hidden');
-} else {
-    gifBadge.classList.add('hidden');
-}
 
                     // Increment local usage and save
                     localUsage += 1;
