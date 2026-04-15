@@ -574,7 +574,35 @@
                 jsonView.innerHTML = syntaxHighlight(data);
 
                 if (response.ok && data.image) {
-                    document.getElementById('render-img').src = data.image;
+                 // Check if card is Tier S or Tier 6 (GIFs)
+const isGif = data.tier === 'TIER S' || data.tier === 'TIER 6';
+
+if (isGif) {
+    // Add loading indicator
+    const imgElement = document.getElementById('render-img');
+    imgElement.style.opacity = '0.5';
+    
+    // Create loading overlay or show spinner
+    const container = document.querySelector('#visual-render .w-40');
+    let spinner = container.querySelector('.gif-spinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.className = 'gif-spinner absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg';
+        spinner.innerHTML = '<div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div><span class="text-xs ml-2">Loading GIF...</span>';
+        container.style.position = 'relative';
+        container.appendChild(spinner);
+    }
+    
+    // Load with cache-bust for GIFs
+    imgElement.src = `${data.image}&_t=${Date.now()}`;
+    
+    imgElement.onload = () => {
+        imgElement.style.opacity = '1';
+        if (spinner) spinner.remove();
+    };
+} else {
+    document.getElementById('render-img').src = data.image;
+}
                     document.getElementById('render-name').innerText = data.name;
                     document.getElementById('render-series').innerText = data.series;
                     document.getElementById('render-tier').innerText = data.tier;
