@@ -1,11 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 
+// Tiers that are stored as MP4 on shoob and must be converted to GIF
+const ANIMATED_TIERS = new Set(['TIER S', 'TIER 6']);
+
 export default function handler(req, res) {
     const { key, random, id } = req.query;
 
     if (key !== 'XYTHERA_API') {
-        return res.status(401).json({ error: "Unauthorized API Key" });
+        return res.status(401).json({ error: 'Unauthorized API Key' });
     }
 
     try {
@@ -22,33 +25,33 @@ export default function handler(req, res) {
         }
 
         if (!selectedCard) {
-            return res.status(404).json({ error: "Card not found" });
+            return res.status(404).json({ error: 'Card not found' });
         }
 
         const realId = selectedCard.id || selectedCard.card_id;
-        const tier = selectedCard.tier || "Unknown";
+        const tier = selectedCard.tier || 'Unknown';
         const protocol = req.headers['x-forwarded-proto'] || 'https';
         const host = req.headers.host;
-        
-        // Add GIF detection based on tier
-        const isAnimated = tier === 'TIER S' || tier === 'TIER 6';
-        
-        // Pass isAnimated as query param to image handler
+
+        // Tier S and Tier 6 cards are MP4 on shoob — image.js will convert them to GIF
+        const isAnimated = ANIMATED_TIERS.has(tier);
+
+        // Pass animated=true so image.js knows to run the MP4→GIF conversion
         const proxyImageUrl = `${protocol}://${host}/api/image?id=${realId}&animated=${isAnimated}`;
 
-        res.status(200).json({
+        return res.status(200).json({
             id: realId,
-            name: selectedCard.name || selectedCard.character || "Unknown",
-            tier: tier,
-            series: selectedCard.series || "Unknown",
-            maker: selectedCard.maker || "Official",
+            name: selectedCard.name || selectedCard.character || 'Unknown',
+            tier,
+            series: selectedCard.series || 'Unknown',
+            maker: selectedCard.maker || 'Official',
             image: proxyImageUrl,
             original_url: selectedCard.image || selectedCard.image_url,
-            is_animated: isAnimated  // Add this flag for frontend
+            is_animated: isAnimated   // true = Tier S / Tier 6 — will be served as GIF
         });
 
     } catch (error) {
-        console.error("DB Error:", error);
-        res.status(500).json({ error: "Database error" });
+        console.error('DB Error:', error);
+        return res.status(500).json({ error: 'Database error' });
     }
 }
