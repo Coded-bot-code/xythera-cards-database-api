@@ -14,16 +14,55 @@ const proxies = [
     "http://daknlrlb:sfpf7jrfkxta@191.96.254.138:6185"
 ];
 
-// Detect if URL points to a GIF
-function isGifUrl(url) {
-    return url?.toLowerCase().includes('.gif') || url?.toLowerCase().includes('gif?');
+// Detect GIF by magic bytes (GIF87a = 0x474946383761, GIF89a = 0x474946383961)
+function isGifBuffer(buffer) {
+    return (
+        buffer.length > 6 &&
+        buffer[0] === 0x47 && // G
+        buffer[1] === 0x49 && // I
+        buffer[2] === 0x46 && // F
+        buffer[3] === 0x38    // 8
+    );
+}
+
+// Follow redirects manually so we capture the final GIF buffer instead of getting a redirect response
+async function fetchWithRedirects(url, agent, maxRedirects = 5) {
+    let currentUrl = url;
+    let redirectCount = 0;
+
+    while (redirectCount < maxRedirects) {
+        const response = await axios.get(currentUrl, {
+            httpsAgent: agent,
+            maxRedirects: 0,
+            responseType: 'arraybuffer',
+            timeout: 12000,
+            validateStatus: () => true,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'image/gif,image/webp,image/apng,image/*,*/*;q=0.8',
+                'Referer': 'https://shoob.gg/'
+            }
+        });
+
+        if (response.status >= 300 && response.status <= 308 && response.headers.location) {
+            currentUrl = response.headers.location;
+            redirectCount++;
+            continue;
+        }
+
+        return response;
+    }
+
+    throw new Error('Too many redirects');
 }
 
 export default async function handler(req, res) {
-    const { id, debug } = req.query;
+    const { id, animated, debug } = req.query;
     if (!id) return res.status(400).send("No ID");
 
-    // Shoob API - this returns the card image (could be PNG or GIF)
+    // animated=true is forwarded from card.js for Tier 6 and Tier S cards
+    const isAnimatedTier = animated === 'true';
+
     const targetUrl = `https://api.shoob.gg/site/api/cardr/${id}?size=400`;
     let debugLogs = [];
 
@@ -31,68 +70,51 @@ export default async function handler(req, res) {
         const randomProxy = proxies[Math.floor(Math.random() * proxies.length)];
         const agent = new HttpsProxyAgent(randomProxy);
 
-        let attemptLog = { 
-            attempt: i + 1, 
-            proxy_ip: randomProxy.split('@')[1], 
+        let attemptLog = {
+            attempt: i + 1,
+            proxy_ip: randomProxy.split('@')[1],
             status: null,
             error: null,
             time_ms: 0,
-            is_gif: false
+            is_gif: false,
+            is_animated_tier: isAnimatedTier
         };
 
         try {
             const start = Date.now();
 
-            const response = await axios.get(targetUrl, {
-                httpsAgent: agent,
-                maxRedirects: 0, 
-                responseType: 'arraybuffer',
-                timeout: 8000, // Increased timeout for GIFs
-                validateStatus: () => true, 
-                headers: { 
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'image/webp,image/apng,image/gif,image/*,*/*;q=0.8', // Accept GIFs
-                    'Referer': 'https://shoob.gg/'
-                }
-            });
+            // Follow redirects so GIFs behind CDN redirects are fetched correctly
+            const response = await fetchWithRedirects(targetUrl, agent);
 
             attemptLog.time_ms = Date.now() - start;
             attemptLog.status = response.status;
 
-            if (response.headers.location) {
-                attemptLog.redirect_url = response.headers.location;
+            if (debug !== 'true' && response.status === 200) {
+                const buffer = Buffer.from(response.data);
+
+                // Magic-byte detection is always authoritative; fall back to tier flag
+                const gifByMagic = isGifBuffer(buffer);
+                const isGif = gifByMagic || isAnimatedTier;
+
+                attemptLog.is_gif = isGif;
+                debugLogs.push(attemptLog);
+
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                res.setHeader('X-Is-Animated', isGif ? 'true' : 'false');
+
+                if (isGif) {
+                    res.setHeader('Content-Type', 'image/gif');
+                    res.setHeader('Cache-Control', 'public, max-age=86400');
+                } else {
+                    const contentType = response.headers['content-type'] || 'image/png';
+                    res.setHeader('Content-Type', contentType);
+                    res.setHeader('Cache-Control', 'public, max-age=31536000');
+                }
+
+                return res.status(200).send(buffer);
             }
 
             debugLogs.push(attemptLog);
-
-            if (debug !== 'true') {
-                // Handle redirects
-                if (response.status >= 300 && response.status <= 308 && response.headers.location) {
-                    return res.redirect(302, response.headers.location);
-                }
-                
-                if (response.status === 200) {
-                    const buffer = Buffer.from(response.data);
-                    const contentType = response.headers['content-type'] || 'image/png';
-                    
-                    // Check if it's a GIF by magic bytes
-                    const isGif = buffer.length > 6 && 
-                                 buffer[0] === 0x47 && buffer[1] === 0x49 && 
-                                 buffer[2] === 0x46 && buffer[3] === 0x38;
-                    
-                    attemptLog.is_gif = isGif;
-                    
-                    // Set proper content type
-                    if (isGif) {
-                        res.setHeader('Content-Type', 'image/gif');
-                        res.setHeader('Cache-Control', 'public, max-age=31536000');
-                    } else {
-                        res.setHeader('Content-Type', contentType);
-                    }
-                    
-                    return res.status(200).send(buffer);
-                }
-            }
 
         } catch (err) {
             attemptLog.error = err.code || err.message;
@@ -104,22 +126,19 @@ export default async function handler(req, res) {
         return res.status(200).json({
             message: "Diagnostics Complete",
             target_url: targetUrl,
+            is_animated_tier: isAnimatedTier,
             logs: debugLogs
         });
     }
 
-    // Fallback - return a proper placeholder
-    res.setHeader('Content-Type', 'image/png');
-    res.status(200).send(Buffer.from(getPlaceholderImage()));
-}
-
-// Base64 encoded placeholder image (400x600 dark card)
-function getPlaceholderImage() {
+    // Fallback placeholder
     const svg = `<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
         <rect width="400" height="600" fill="#0f172a"/>
-        <rect x="50" y="250" width="300" height="40" rx="5" fill="#1e293b"/>
-        <text x="200" y="275" font-family="Arial" font-size="14" fill="#64748b" text-anchor="middle">⚠️ Failed to Load</text>
-        <text x="200" y="295" font-family="Arial" font-size="10" fill="#475569" text-anchor="middle">Card Image Unavailable</text>
+        <rect x="50" y="250" width="300" height="60" rx="5" fill="#1e293b"/>
+        <text x="200" y="275" font-family="Arial" font-size="14" fill="#64748b" text-anchor="middle">Failed to Load</text>
+        <text x="200" y="298" font-family="Arial" font-size="10" fill="#475569" text-anchor="middle">Card Image Unavailable</text>
     </svg>`;
-    return Buffer.from(svg);
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(200).send(Buffer.from(svg));
 }
