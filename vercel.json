@@ -1,5 +1,16 @@
 {
   "version": 2,
+  "functions": {
+    "api/image.js": {
+      "maxDuration": 60
+    },
+    "api/card.js": {
+      "maxDuration": 15
+    },
+    "api/download.py": {
+      "maxDuration": 30
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
