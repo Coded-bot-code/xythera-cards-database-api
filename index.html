@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer" />
+    <title>Xythera | Developer Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: 220 20% 97%;
+            --foreground: 220 25% 10%;
+            --card: 0 0% 100%;
+            --primary: 142 60% 45%;
+            --primary-foreground: 0 0% 100%;
+            --secondary: 220 15% 92%;
+            --muted: 220 15% 94%;
+            --muted-foreground: 220 10% 45%;
+            --border: 220 15% 88%;
+            --ring: 142 60% 45%;
+            --success: 142 60% 45%;
+            --warning: 38 92% 50%;
+        }
+
+        body { 
+            background-color: hsl(220 20% 97%); 
+            color: hsl(220 25% 10%); 
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Clean Professional Grid */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: -1;
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at top center, black 40%, transparent 100%);
+            -webkit-mask-image: radial-gradient(circle at top center, black 40%, transparent 100%);
+        }
+
+        .dark .bg-grid {
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        }
+
+        /* macOS Style Window Structure */
+        .mac-window {
+            background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08); overflow: hidden;
+        }
+        .dark .mac-window {
+            background: #151515; border-color: #2a2a2a;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .mac-header {
+            background: hsl(var(--secondary)); border-bottom: 1px solid hsl(var(--border));
+            padding: 12px 16px; display: flex; align-items: center;
+        }
+        .dark .mac-header {
+            background: #1e1e1e; border-bottom-color: #2a2a2a;
+        }
+        .mac-dots { display: flex; gap: 6px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background-color: #ff5f56; }
+        .dot-yellow { background-color: #ffbd2e; }
+        .dot-green { background-color: #27c93f; }
+        .mac-title { flex: 1; text-align: center; font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 500; margin-right: 48px;}
+
+/* GIF Loading Spinner */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.gif-spinner {
+    position: absolute;
+    z-index: 10;
+}
+
+        /* Inputs & Buttons */
+        .input-clean {
+            background: hsl(var(--background)); border: 1px solid hsl(var(--border)); border-radius: 8px; 
+            color: hsl(var(--foreground)); transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .dark .input-clean {
+            background: #0a0a0a; border-color: #333; color: #fff;
+        }
+        .input-clean:focus { outline: none; border-color: hsl(var(--ring)); box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2); }
+        .nav-btn { color: hsl(var(--muted-foreground)); transition: all 0.2s; padding: 6px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; }
+        .nav-btn:hover { color: hsl(var(--foreground)); background: hsl(var(--muted) / 0.5); }
+        .nav-btn.active { color: hsl(var(--primary-foreground)); background: hsl(var(--primary)); border: none; }
+
+        /* Social Buttons */
+        .social-btn {
+            display: flex; align-items: center; gap: 10px; background: hsl(var(--background)); border: 1px solid hsl(var(--border));
+            padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; color: hsl(var(--foreground));
+            transition: all 0.2s ease; text-decoration: none;
+        }
+        .social-btn:hover { background: hsl(var(--muted)); border-color: hsl(var(--primary)); transform: translateY(-2px); }
+
+        /* Animations & Utils */
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+        .code-font { font-family: 'JetBrains Mono', monospace; }
+
+        /* Progress Bar */
+        .progress-bg { background: hsl(var(--muted)); border-radius: 99px; height: 8px; width: 100%; overflow: hidden; }
+        .progress-fill { background: hsl(var(--primary)); height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body { background-color: hsl(222 28% 7%); color: hsl(210 20% 92%); }
+        }
+        html.dark body { background-color: hsl(222 28% 7%); color: hsl(210 20% 92%); }
+
+        /* Responsive: prevent horizontal overflow */
+        pre { white-space: pre-wrap; word-break: break-all; }
+        @media (max-width: 640px) {
+            .mac-window { border-radius: 8px; }
+            pre { font-size: 11px; }
+            .text-3xl { font-size: 1.5rem; }
+        }
+        /* GIF image transitions */
+        #render-img { transition: opacity 0.25s ease; }
+        /* Prevent layout shift during GIF load */
+        #card-img-container { contain: layout; }
+    </style>
+</head>
+<body class="dark">
+
+    <div class="bg-grid"></div>
+
+    <!-- Top Navigation & Global Stats -->
+    <nav class="w-full border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 md:px-8 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center font-bold text-primary-foreground text-xs shadow-lg">XY</div>
+                <span class="font-bold tracking-tight text-foreground hidden sm:block">XYTHERA</span>
+            </div>
+
+            <!-- Global Real-Time Stats -->
+            <div class="flex items-center gap-4 md:gap-8">
+                <div class="flex flex-col items-end">
+                    <span class="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Global Users</span>
+                    <span class="text-sm font-mono text-foreground flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        <span id="stat-users">1,402</span>
+                    </span>
+                </div>
+                <div class="h-8 w-px bg-border"></div>
+                <div class="flex flex-col items-end">
+                    <span class="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Total Requests</span>
+                    <span class="text-sm font-mono text-foreground" id="stat-reqs">8,492,031</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header & Tabs -->
+    <header class="max-w-6xl mx-auto w-full px-4 md:px-8 mt-12 mb-8">
+        <h1 class="text-3xl font-bold text-foreground tracking-tight mb-6">Xythera Developer Dashboard</h1>
+        <div class="overflow-x-auto -mx-4 px-4 pb-1 md:mx-0 md:px-0">
+            <div class="flex bg-muted/30 border border-border p-1 rounded-lg w-max min-w-full md:w-fit">
+                <button onclick="switchTab('playground')" id="tab-playground" class="nav-btn active whitespace-nowrap">Playground</button>
+                <button onclick="switchTab('docs')" id="tab-docs" class="nav-btn whitespace-nowrap">Documentation</button>
+                <button onclick="switchTab('profile')" id="tab-profile" class="nav-btn whitespace-nowrap">User Profile</button>
+                <button onclick="switchTab('ytdl')" id="tab-ytdl" class="nav-btn whitespace-nowrap">YT Downloader</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-6xl mx-auto px-4 md:px-8 pb-12 z-10 flex-grow">
+
+    <!-- 🟢 TAB 1: PLAYGROUND -->
+        <div id="view-playground" class="fade-in">
+            <!-- Left Panel -->
+            <div class="md:col-span-5 flex flex-col gap-6">
+                <div class="mac-window">
+                    <div class="mac-header">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title">request_config.json</div>
+                    </div>
+                    <div class="p-6 space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Authentication Key</label>
+                            <input type="password" id="test-key" value="XYTHERA_API" class="w-full input-clean p-2.5 text-sm code-font">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Fetch Mode</label>
+                            <select id="test-mode" onchange="toggleIdInput()" class="w-full input-clean p-2.5 text-sm cursor-pointer">
+                                <option value="random">Randomize (Gacha Pull)</option>
+                                <option value="specific">Target Specific ID</option>
+                            </select>
+                        </div>
+                        <div id="id-input-container" class="hidden fade-in">
+                            <label class="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Target Asset ID</label>
+                            <input type="text" id="test-id" placeholder="e.g. 61a7015099f..." class="w-full input-clean p-2.5 text-sm code-font">
+                        </div>
+                        <button onclick="executeTest()" id="execute-btn" class="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2.5 rounded-lg transition-colors mt-2 text-sm">
+                            Execute Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="md:col-span-7 flex flex-col gap-6">
+                <div class="mac-window h-fit">
+                    <div class="mac-header">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title" id="response-status">Waiting for request...</div>
+                    </div>
+                    <div class="p-0 bg-background">
+                        <pre id="json-result" class="p-5 code-font text-sm text-foreground/80 overflow-x-auto min-h-[160px] leading-relaxed">{ "status": "idle" }</pre>
+                    </div>
+                </div>
+
+                <div id="visual-render" class="mac-window hidden fade-in">
+                    <div class="mac-header border-b border-border/50">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title" id="preview-filename">asset_preview.png</div>
+                    </div>
+                    <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start bg-background/50">
+                        <div class="w-40 h-60 rounded-lg overflow-hidden border border-border shadow-lg flex-shrink-0 bg-muted relative" id="card-img-container">
+                            <img id="render-img" src="" alt="Card Preview" class="w-full h-full object-cover transition-opacity duration-300">
+                            <div id="gif-loading-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-lg gap-2">
+                                <div class="w-7 h-7 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                <span class="text-[10px] text-white font-mono">Loading GIF…</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col w-full py-2">
+                            <div class="text-[11px] text-muted-foreground code-font mb-1" id="render-id"></div>
+                            <h2 class="text-2xl font-semibold text-foreground mb-1" id="render-name"></h2>
+                            <p class="text-sm text-muted-foreground mb-5" id="render-series"></p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-muted/30 rounded border border-border p-3">
+                                    <div class="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Tier</div>
+                                    <div class="text-sm font-medium text-foreground" id="render-tier"></div>
+                                    <div id="gif-badge" class="hidden mt-1 text-[10px] font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full inline-block">🎬 ANIMATED GIF</div>
+                                </div>
+                                <div class="bg-muted/30 rounded border border-border p-3">
+                                    <div class="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Maker</div>
+                                    <div class="text-sm font-medium text-foreground" id="render-maker"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔵 TAB 2: DOCUMENTATION -->
+        <div id="view-docs" class="hidden fade-in">
+            <div class="md:col-span-7 space-y-6">
+                <div class="mac-window p-8">
+                    <h2 class="text-2xl font-semibold mb-2">Endpoint Specifications</h2>
+                    <p class="text-muted-foreground text-sm mb-6">REST API used for retrieving routed image data and metadata.</p>
+
+                    <div class="flex items-center bg-muted/30 border border-border rounded-lg p-3 code-font text-sm mb-8">
+                        <span class="text-green-600 dark:text-green-400 font-bold mr-4">GET</span>
+                        <span class="text-foreground">https://xythera-cards-database-api.vercel.app/api/card</span>
+                    </div>
+
+                    <h3 class="text-lg font-semibold mb-4">Query Parameters</h3>
+                    <div class="border border-border rounded-lg overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <tr class="bg-muted/50 text-muted-foreground border-b border-border">
+                                <th class="p-3 font-medium">Parameter</th>
+                                <th class="p-3 font-medium">Type</th>
+                                <th class="p-3 font-medium">Description</th>
+                            </tr>
+                            <tr class="border-b border-border">
+                                <td class="p-3 code-font text-primary">key</td>
+                                <td class="p-3 text-muted-foreground code-font">string</td>
+                                <td class="p-3 text-foreground/80">Auth key. (Required)</td>
+                            </tr>
+                            <tr class="border-b border-border">
+                                <td class="p-3 code-font text-primary">random</td>
+                                <td class="p-3 text-muted-foreground code-font">boolean</td>
+                                <td class="p-3 text-foreground/80">Returns a random asset.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 code-font text-primary">id</td>
+                                <td class="p-3 text-muted-foreground code-font">string</td>
+                                <td class="p-3 text-foreground/80">Fetch specific asset by ID.</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-5 space-y-6">
+                <div class="mac-window">
+                    <div class="mac-header"><div class="mac-dots"><div class="dot dot-red"></div></div><div class="mac-title">bot_integration.js</div></div>
+                    <pre class="p-5 code-font text-xs text-primary-foreground/80 bg-background leading-loose overflow-x-auto">
+<span class="text-primary">const</span> axios = <span class="text-primary">require</span>('axios');
+
+<span class="text-primary">async function</span> <span class="text-primary">fetchCard</span>() {
+  <span class="text-primary">const</span> res = <span class="text-primary">await</span> axios.get('https://.../api/card', {
+    params: { random: <span class="text-primary">true</span>, key: 'XYTHERA_API' }
+  });
+  <span class="text-muted-foreground">// Returns perfectly bypassed Image URL</span>
+  console.log(res.data.image); 
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🟣 TAB 3: USER PROFILE & XYTHERA BRANDING -->
+        <div id="view-profile" class="hidden fade-in">
+            <div class="mac-window p-8 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-primary/60 border-2 border-border flex items-center justify-center text-xl font-bold text-primary-foreground shadow-lg">XY</div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-foreground">Xythera Admin</h2>
+                            <p class="text-muted-foreground text-sm">System Architect / Root Access</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Your API Key</label>
+                            <div class="flex">
+                                <input type="password" value="XYTHERA_API" readonly class="w-full input-clean p-2.5 text-sm code-font rounded-r-none border-r-0 text-muted-foreground">
+                                <button onclick="copyApiKey()" class="bg-muted/30 border border-border px-4 rounded-r-lg hover:bg-muted/50 transition-colors text-sm">Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-muted/20 border border-border rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-foreground">Current Rate Limit</span>
+                                <span class="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded">Unrestricted</span>
+                            </div>
+                            <p class="text-xs text-muted-foreground">Enterprise root limits applied.</p>
+                        </div>
+                    </div>
+                </div>
+
+  <!-- 🥷 XYTHERA SOCIALS MODULE -->
+                <div class="mt-8 border-t border-border pt-6">
+                    <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Developer & Support Contact</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <a href="https://t.me/silent000666" target="_blank" class="social-btn">
+                            <svg class="w-5 h-5 text-[#0088cc]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.98 1.25-5.58 3.63-.53.36-1.01.54-1.44.53-.47-.01-1.38-.27-2.06-.49-.83-.27-1.49-.42-1.43-.88.03-.24.38-.48 1.05-.74 4.11-1.79 6.86-2.98 8.24-3.56 3.92-1.64 4.74-1.92 5.27-1.93.12 0 .38.03.53.17.13.12.16.28.18.42.02.13.02.26.01.35z"/></svg>
+                            @XytheraBot
+                        </a>
+                        <a href="https://wa.me/923281262584" target="_blank" class="social-btn">
+                            <svg class="w-5 h-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            Support
+                        </a>
+                        <a href="#" target="_blank" class="social-btn sm:col-span-2 justify-center">
+                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            xythera@support.com
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Module -->
+            <div class="mac-window p-8 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold mb-6">Monthly Usage Statistics</h3>
+                    <div class="space-y-2 mb-8">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-muted-foreground">Requests Made</span>
+                            <span class="text-foreground font-mono"><span id="local-usage-text">0</span> <span class="text-muted-foreground">/ ∞</span></span>
+                        </div>
+                        <div class="progress-bg">
+                            <div class="progress-fill" id="local-usage-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="border border-border rounded-lg p-4 bg-muted/20">
+                            <p class="text-xs text-muted-foreground uppercase tracking-widest mb-1">Data Transferred</p>
+                            <p class="text-lg font-mono text-foreground">14.2 TB</p>
+                        </div>
+                        <div class="border border-border rounded-lg p-4 bg-muted/20">
+                            <p class="text-xs text-muted-foreground uppercase tracking-widest mb-1">Cache Hit Rate</p>
+                            <p class="text-lg font-mono text-foreground">99.8%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-border">
+                    <div class="flex items-center gap-3">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                        <span class="text-sm text-muted-foreground">All Proxy Nodes Operational</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔴 TAB 4: YOUTUBE DOWNLOADER -->
+        <div id="view-ytdl" class="hidden fade-in">
+            <!-- Left Panel: Config -->
+            <div class="md:col-span-5 flex flex-col gap-6">
+                <div class="mac-window">
+                    <div class="mac-header">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title">yt_downloader.config</div>
+                    </div>
+                    <div class="p-6 space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">YouTube URL</label>
+                            <input type="url" id="yt-url" placeholder="https://youtube.com/watch?v=..." class="w-full input-clean p-2.5 text-sm code-font">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Media Type</label>
+                            <select id="yt-type" class="w-full input-clean p-2.5 text-sm cursor-pointer">
+                                <option value="video">Video (MP4)</option>
+                                <option value="audio">Audio (M4A)</option>
+                            </select>
+                        </div>
+                        <button onclick="fetchYtDownload()" id="yt-btn" class="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2.5 rounded-lg transition-colors mt-2 text-sm">
+                            Get Download Link
+                        </button>
+                        <p class="text-xs text-muted-foreground text-center">Powered by yt-dlp &bull; Links may expire</p>
+                    </div>
+                </div>
+
+                <div class="mac-window p-5">
+                    <div class="text-xs text-muted-foreground uppercase tracking-widest mb-3 font-semibold">API Endpoint</div>
+                    <div class="flex items-center bg-muted/30 border border-border rounded-lg p-2.5 code-font text-xs mb-3">
+                        <span class="text-green-600 dark:text-green-400 font-bold mr-3">GET</span>
+                        <span class="text-muted-foreground truncate">/api/download?url=...&amp;type=video</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span class="text-primary">type</span>
+                        <span>=</span>
+                        <span class="text-primary">video</span>
+                        <span class="mx-1">|</span>
+                        <span class="text-primary">audio</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="md:col-span-7 flex flex-col gap-6">
+                <div class="mac-window h-fit">
+                    <div class="mac-header">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title" id="yt-status">Waiting for request...</div>
+                    </div>
+                    <div class="p-0 bg-background">
+                        <pre id="yt-json-result" class="p-5 code-font text-sm text-foreground/80 overflow-x-auto min-h-[160px] leading-relaxed">{ "status": "idle" }</pre>
+                    </div>
+                </div>
+
+                <div id="yt-result-card" class="mac-window hidden fade-in">
+                    <div class="mac-header border-b border-border/50">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title">download_ready</div>
+                    </div>
+                    <div class="p-4 sm:p-6 flex flex-col gap-4 bg-background/50">
+                        <!-- Thumbnail + Title row -->
+                        <div class="flex flex-col sm:flex-row gap-4 items-start">
+                            <div class="w-full sm:w-44 h-28 rounded-lg overflow-hidden border border-border shadow-lg flex-shrink-0 bg-muted">
+                                <img id="yt-thumbnail" src="" alt="thumbnail" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex flex-col gap-1 min-w-0">
+                                <div class="text-[10px] text-muted-foreground uppercase tracking-widest">Title</div>
+                                <h3 class="text-sm font-semibold text-foreground leading-snug break-words" id="yt-title"></h3>
+                                <div class="text-[11px] text-muted-foreground mt-1" id="yt-uploader-row">
+                                    <span id="yt-uploader"></span>
+                                    <span id="yt-duration-sep" class="hidden mx-1">•</span>
+                                    <span id="yt-duration"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Format + Quality badges -->
+                        <div class="flex gap-3">
+                            <div class="bg-muted/30 rounded border border-border p-2 flex-1">
+                                <div class="text-[10px] text-muted-foreground uppercase mb-0.5">Format</div>
+                                <div class="text-xs font-medium text-foreground code-font" id="yt-format"></div>
+                            </div>
+                            <div class="bg-muted/30 rounded border border-border p-2 flex-1">
+                                <div class="text-[10px] text-muted-foreground uppercase mb-0.5">Quality</div>
+                                <div class="text-xs font-medium text-foreground code-font" id="yt-quality"></div>
+                            </div>
+                        </div>
+                        <!-- Download button -->
+                        <a id="yt-download-link" href="#" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 rounded-lg text-sm transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Open Download Link
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="w-full border-t border-border bg-background mt-auto py-6 relative z-10">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-muted-foreground text-xs mb-3">Engineered & Maintained by <span class="text-foreground font-bold tracking-widest uppercase">Xythera</span></p>
+            <div class="flex justify-center items-center gap-6 text-[11px] font-mono text-muted-foreground">
+                <a href="#" class="hover:text-foreground transition-colors">Discord</a>
+                <span>•</span>
+                <a href="#" class="hover:text-foreground transition-colors">Twitter</a>
+                <span>•</span>
+                <a href="#" class="hover:text-foreground transition-colors">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Copy API Key function
+        function copyApiKey() {
+            const apiKey = document.getElementById('test-key').value;
+            navigator.clipboard.writeText(apiKey);
+            alert('API Key copied to clipboard!');
+        }
+
+        // Tab Navigation Logic
+        // Tab grid layouts map - defines layout class per tab
+        const tabLayouts = {
+            playground: 'grid grid-cols-1 md:grid-cols-12 gap-8',
+            docs:       'grid grid-cols-1 md:grid-cols-12 gap-8',
+            profile:    'grid grid-cols-1 md:grid-cols-2 gap-8',
+            ytdl:       'grid grid-cols-1 md:grid-cols-12 gap-8',
+        };
+
+        function switchTab(tabId) {
+            ['playground', 'docs', 'profile', 'ytdl'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                // Remove layout classes and hide
+                el.classList.add('hidden');
+                (tabLayouts[id] || '').split(' ').filter(Boolean).forEach(c => el.classList.remove(c));
+                document.getElementById(`tab-${id}`).classList.remove('active');
+            });
+            const target = document.getElementById(`view-${tabId}`);
+            target.classList.remove('hidden');
+            // Re-apply grid layout for this tab
+            (tabLayouts[tabId] || '').split(' ').filter(Boolean).forEach(c => target.classList.add(c));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // Apply initial layout for playground (default active tab)
+        (function() {
+            const el = document.getElementById('view-playground');
+            (tabLayouts['playground'] || '').split(' ').filter(Boolean).forEach(c => el.classList.add(c));
+        })();
+
+        // Playground Logic
+        function toggleIdInput() {
+            const mode = document.getElementById('test-mode').value;
+            if (mode === 'specific') document.getElementById('id-input-container').classList.remove('hidden');
+            else document.getElementById('id-input-container').classList.add('hidden');
+        }
+
+        function syntaxHighlight(json) {
+            if (typeof json != 'string') { json = JSON.stringify(json, undefined, 2); }
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'text-primary';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) cls = 'text-primary font-medium';
+                    else cls = 'text-foreground/80';
+                } else if (/true|false/.test(match)) cls = 'text-green-600 dark:text-green-400';
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // Global Real-Time Stats Simulator
+        let globalReqs = 8492031;
+        let globalUsers = 1402;
+        setInterval(() => {
+            globalReqs += Math.floor(Math.random() * 8);
+            document.getElementById('stat-reqs').innerText = globalReqs.toLocaleString();
+        }, 1200);
+        setInterval(() => {
+            if(Math.random() > 0.7) {
+                globalUsers += 1;
+                document.getElementById('stat-users').innerText = globalUsers.toLocaleString();
+            }
+        }, 5000);
+
+        // Local User Profile Usage Tracker
+        let localUsage = parseInt(localStorage.getItem('xythera_usage')) || 1204;
+        function updateProfileUI() {
+            document.getElementById('local-usage-text').innerText = localUsage.toLocaleString();
+            let percentage = (localUsage / 100000) * 100;
+            document.getElementById('local-usage-bar').style.width = Math.min(percentage, 100) + '%';
+        }
+        updateProfileUI();
+
+        async function executeTest() {
+            const btn = document.getElementById('execute-btn');
+            const statusText = document.getElementById('response-status');
+            const jsonView = document.getElementById('json-result');
+            const visualRender = document.getElementById('visual-render');
+
+            const key = document.getElementById('test-key').value;
+            const mode = document.getElementById('test-mode').value;
+            const cardId = document.getElementById('test-id').value;
+
+            let url = window.location.origin + `/api/card?key=${encodeURIComponent(key)}`;
+            if (mode === 'random') url += `&random=true`;
+            else {
+                if (!cardId) { jsonView.innerHTML = '<span class="text-red-500">Error: Target ID required.</span>'; return; }
+                url += `&id=${encodeURIComponent(cardId)}`;
+            }
+            url += `&t=${Date.now()}`;
+
+            btn.innerText = 'Processing...';
+            btn.classList.add('opacity-70');
+            visualRender.classList.add('hidden');
+            jsonView.innerHTML = '<span class="text-muted-foreground">Fetching data...</span>';
+            statusText.innerText = 'GET /api/card';
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                statusText.innerText = response.ok ? 'Status: 200 OK' : `Status: ${response.status} ERROR`;
+                jsonView.innerHTML = syntaxHighlight(data);
+
+                if (response.ok && data.image) {
+                    // Use is_animated flag from API (set by card.js for Tier 6 & Tier S)
+                    const isGif = data.is_animated === true || data.tier === 'TIER S' || data.tier === 'TIER 6';
+
+                    const imgEl = document.getElementById('render-img');
+                    const overlay = document.getElementById('gif-loading-overlay');
+                    const filenameEl = document.getElementById('preview-filename');
+
+                    // Update titlebar filename to reflect media type
+                    filenameEl.innerText = isGif ? 'asset_preview.gif' : 'asset_preview.png';
+
+                    // Reset image state
+                    imgEl.style.opacity = '0';
+                    imgEl.onload = null;
+                    imgEl.onerror = null;
+
+                    if (isGif) {
+                        overlay.classList.remove('hidden');
+                        // Cache-bust GIF so browser doesn't serve a stale static frame
+                        imgEl.src = `${data.image}&_cb=${Date.now()}`;
+                    } else {
+                        overlay.classList.add('hidden');
+                        imgEl.src = data.image;
+                    }
+
+                    imgEl.onload = () => {
+                        imgEl.style.opacity = '1';
+                        overlay.classList.add('hidden');
+                    };
+                    imgEl.onerror = () => {
+                        imgEl.style.opacity = '1';
+                        overlay.classList.add('hidden');
+                    };
+
+                    // Populate card metadata
+                    document.getElementById('render-id').innerText = data.id;
+                    document.getElementById('render-name').innerText = data.name;
+                    document.getElementById('render-series').innerText = data.series;
+                    document.getElementById('render-tier').innerText = data.tier;
+                    document.getElementById('render-maker').innerText = data.maker || 'Official';
+
+                    // Show or hide animated GIF badge
+                    const gifBadge = document.getElementById('gif-badge');
+                    gifBadge.classList.toggle('hidden', !isGif);
+
+                    setTimeout(() => visualRender.classList.remove('hidden'), 100);
+
+                    // Increment local usage counter
+                    localUsage += 1;
+                    localStorage.setItem('xythera_usage', localUsage);
+                    updateProfileUI();
+                }
+            } catch (error) {
+                statusText.innerText = 'NETWORK_ERROR';
+                jsonView.innerHTML = `<span class="text-red-500">${error.message}</span>`;
+            }
+
+            btn.innerText = 'Execute Request';
+            btn.classList.remove('opacity-70');
+        }
+
+        // YouTube Downloader Logic
+        async function fetchYtDownload() {
+            const btn = document.getElementById('yt-btn');
+            const statusText = document.getElementById('yt-status');
+            const jsonView = document.getElementById('yt-json-result');
+            const resultCard = document.getElementById('yt-result-card');
+
+            const url = document.getElementById('yt-url').value.trim();
+            const type = document.getElementById('yt-type').value;
+
+            if (!url) {
+                jsonView.innerHTML = '<span class="text-red-500">Error: Please enter a YouTube URL.</span>';
+                return;
+            }
+
+            // Basic YouTube URL validation
+            const ytPattern = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?|youtu\.be\/|youtube\.com\/shorts\/)/;
+            if (!ytPattern.test(url)) {
+                jsonView.innerHTML = '<span class="text-red-500">Error: Please enter a valid YouTube URL.</span>';
+                return;
+            }
+
+            btn.innerText = 'Fetching...';
+            btn.disabled = true;
+            btn.classList.add('opacity-70');
+            resultCard.classList.add('hidden');
+            jsonView.innerHTML = '<span class="text-muted-foreground">Extracting download link…</span>';
+            statusText.innerText = 'GET /api/download';
+
+            try {
+                const apiUrl = `${window.location.origin}/api/download?url=${encodeURIComponent(url)}&type=${encodeURIComponent(type)}`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                statusText.innerText = data.success ? 'Status: 200 OK' : `Status: ${data.status} ERROR`;
+                jsonView.innerHTML = syntaxHighlight(data);
+
+                if (data.success && data.result) {
+                    const r = data.result;
+
+                    document.getElementById('yt-thumbnail').src = r.thumbnail || '';
+                    document.getElementById('yt-title').innerText = r.title || 'Unknown Title';
+                    document.getElementById('yt-format').innerText = r.format ? r.format.toUpperCase() : '';
+                    document.getElementById('yt-quality').innerText = r.quality || '';
+                    document.getElementById('yt-download-link').href = r.download_url || '#';
+
+                    // Uploader & duration (new fields from fixed download.py)
+                    const uploaderEl = document.getElementById('yt-uploader');
+                    const durationEl = document.getElementById('yt-duration');
+                    const durSepEl = document.getElementById('yt-duration-sep');
+
+                    uploaderEl.innerText = r.uploader || '';
+                    if (r.duration) {
+                        durationEl.innerText = r.duration;
+                        durSepEl.classList.remove('hidden');
+                    } else {
+                        durationEl.innerText = '';
+                        durSepEl.classList.add('hidden');
+                    }
+
+                    setTimeout(() => resultCard.classList.remove('hidden'), 100);
+                }
+            } catch (error) {
+                statusText.innerText = 'NETWORK_ERROR';
+                jsonView.innerHTML = `<span class="text-red-500">${error.message}</span>`;
+            }
+
+            btn.innerText = 'Get Download Link';
+            btn.disabled = false;
+            btn.classList.remove('opacity-70');
+        }
+    </script>
+</body>
+</html>
