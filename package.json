@@ -1,9 +1,0 @@
-{
-  "name": "xythera-cards-database-api",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "axios": "^1.6.8",
-    "https-proxy-agent": "^7.0.4"
-  }
-}
