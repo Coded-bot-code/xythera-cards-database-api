@@ -73,7 +73,7 @@
         .dot-green { background-color: #27c93f; }
         .mac-title { flex: 1; text-align: center; font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 500; margin-right: 48px;}
 
-/* GIF Loading Spinner */
+/* WebP Loading Spinner */
 .animate-spin {
     animation: spin 1s linear infinite;
 }
@@ -81,7 +81,7 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
-.gif-spinner {
+.webp-spinner {
     position: absolute;
     z-index: 10;
 }
@@ -133,9 +133,9 @@
             pre { font-size: 11px; }
             .text-3xl { font-size: 1.5rem; }
         }
-        /* GIF image transitions */
+        /* WebP image transitions */
         #render-img { transition: opacity 0.25s ease; }
-        /* Prevent layout shift during GIF load */
+        /* Prevent layout shift during WebP load */
         #card-img-container { contain: layout; }
     </style>
 </head>
@@ -236,9 +236,9 @@
                     <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start bg-background/50">
                         <div class="w-40 h-60 rounded-lg overflow-hidden border border-border shadow-lg flex-shrink-0 bg-muted relative" id="card-img-container">
                             <img id="render-img" src="" alt="Card Preview" class="w-full h-full object-cover transition-opacity duration-300">
-                            <div id="gif-loading-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-lg gap-2">
+                            <div id="webp-loading-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-lg gap-2">
                                 <div class="w-7 h-7 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                <span class="text-[10px] text-white font-mono">Loading GIF…</span>
+                                <span class="text-[10px] text-white font-mono">Loading WebP…</span>
                             </div>
                         </div>
                         <div class="flex flex-col w-full py-2">
@@ -249,7 +249,7 @@
                                 <div class="bg-muted/30 rounded border border-border p-3">
                                     <div class="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Tier</div>
                                     <div class="text-sm font-medium text-foreground" id="render-tier"></div>
-                                    <div id="gif-badge" class="hidden mt-1 text-[10px] font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full inline-block">🎬 ANIMATED GIF</div>
+                                    <div id="webp-badge" class="hidden mt-1 text-[10px] font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full inline-block">🎬 PLAYABLE WEBP</div>
                                 </div>
                                 <div class="bg-muted/30 rounded border border-border p-3">
                                     <div class="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Maker</div>
@@ -634,24 +634,24 @@
                 jsonView.innerHTML = syntaxHighlight(data);
 
                 if (response.ok && data.image) {
-                    // Use is_animated flag from API (set by card.js for Tier 6 & Tier S)
-                    const isGif = data.is_animated === true || data.tier === 'TIER S' || data.tier === 'TIER 6';
+                    // Use is_playable_webp flag from API (set by card.js for Tier 6 & Tier S)
+                    const isPlayableWebp = data.is_playable_webp === true || data.tier === 'TIER S' || data.tier === 'TIER 6';
 
                     const imgEl = document.getElementById('render-img');
-                    const overlay = document.getElementById('gif-loading-overlay');
+                    const overlay = document.getElementById('webp-loading-overlay');
                     const filenameEl = document.getElementById('preview-filename');
 
                     // Update titlebar filename to reflect media type
-                    filenameEl.innerText = isGif ? 'asset_preview.gif' : 'asset_preview.png';
+                    filenameEl.innerText = isPlayableWebp ? 'asset_preview.webp' : 'asset_preview.png';
 
                     // Reset image state
                     imgEl.style.opacity = '0';
                     imgEl.onload = null;
                     imgEl.onerror = null;
 
-                    if (isGif) {
+                    if (isPlayableWebp) {
                         overlay.classList.remove('hidden');
-                        // Cache-bust GIF so browser doesn't serve a stale static frame
+                        // Cache-bust WebP so browser doesn't serve a stale static frame
                         imgEl.src = `${data.image}&_cb=${Date.now()}`;
                     } else {
                         overlay.classList.add('hidden');
@@ -674,9 +674,9 @@
                     document.getElementById('render-tier').innerText = data.tier;
                     document.getElementById('render-maker').innerText = data.maker || 'Official';
 
-                    // Show or hide animated GIF badge
-                    const gifBadge = document.getElementById('gif-badge');
-                    gifBadge.classList.toggle('hidden', !isGif);
+                    // Show or hide playable WebP badge
+                    const webpBadge = document.getElementById('webp-badge');
+                    webpBadge.classList.toggle('hidden', !isPlayableWebp);
 
                     setTimeout(() => visualRender.classList.remove('hidden'), 100);
 
