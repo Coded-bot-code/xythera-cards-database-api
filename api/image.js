@@ -38,7 +38,6 @@ function detectMimeType(buffer) {
         return 'image/jpeg';
     }
     // MP4 / MOV — ftyp box at offset 4
-    // Common: ftyp + mp42, isom, avc1, M4V, qt
     const ftyp = buffer.slice(4, 8).toString('ascii');
     if (ftyp === 'ftyp') return 'video/mp4';
     // Also check offset 0 for some mp4 variants
@@ -55,43 +54,37 @@ function detectMimeType(buffer) {
     return null; // unknown
 }
 
-// Convert MP4 buffer → GIF buffer using ffmpeg
-// High-quality palette-based conversion, capped at 15fps and 400px wide
-async function mp4BufferToGif(mp4Buffer, id) {
+// Convert MP4 buffer → Playable WebP buffer using ffmpeg
+// High-quality conversion for WhatsApp-compatible animated WebP
+async function mp4BufferToWebp(mp4Buffer, id) {
     const tmp = tmpdir();
-    const inputPath  = join(tmp, `xythera_in_${id}.mp4`);
-    const palettePath = join(tmp, `xythera_pal_${id}.png`);
-    const outputPath = join(tmp, `xythera_out_${id}.gif`);
+    const inputPath = join(tmp, `xythera_in_${id}.mp4`);
+    const outputPath = join(tmp, `xythera_out_${id}.webp`);
 
     try {
         // Write MP4 to disk
         await writeFile(inputPath, mp4Buffer);
 
-        // Step 1: Generate optimised palette from the video
+        // Convert MP4 → Animated WebP with libwebp_anim codec
+        // Quality preset: 4 (highest), Quality level: 80, 12fps, 400px width
         await execFileAsync('ffmpeg', [
             '-y',
             '-i', inputPath,
-            '-vf', 'fps=12,scale=400:-1:flags=lanczos,palettegen=max_colors=128:stats_mode=diff',
-            palettePath
-        ], { timeout: 25000 });
-
-        // Step 2: Convert MP4 → GIF using the palette (dithering for quality)
-        await execFileAsync('ffmpeg', [
-            '-y',
-            '-i', inputPath,
-            '-i', palettePath,
-            '-lavfi', 'fps=12,scale=400:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
-            '-loop', '0',         // loop forever
+            '-c:v', 'libwebp_anim',
+            '-preset', '4',           // Highest quality preset
+            '-quality', '80',          // Quality level 80 (excellent balance)
+            '-framerate', '12',        // 12fps for smooth playback
+            '-vf', 'scale=400:-1',     // Scale to 400px width, maintain aspect ratio
+            '-loop', '0',              // Loop forever
             outputPath
         ], { timeout: 30000 });
 
-        const gifBuffer = await readFile(outputPath);
-        return gifBuffer;
+        const webpBuffer = await readFile(outputPath);
+        return webpBuffer;
 
     } finally {
         // Clean up temp files — don't await, fire & forget
         unlink(inputPath).catch(() => {});
-        unlink(palettePath).catch(() => {});
         unlink(outputPath).catch(() => {});
     }
 }
@@ -129,8 +122,8 @@ export default async function handler(req, res) {
     const { id, animated, debug } = req.query;
     if (!id) return res.status(400).send('No ID provided');
 
-    // animated=true → Tier 6 or Tier S card — must be served as GIF
-    const shouldBeGif = animated === 'true';
+    // animated=true → Tier 6 or Tier S card — must be served as playable WebP
+    const shouldBePlayableWebp = animated === 'true';
 
     const targetUrl = `https://api.shoob.gg/site/api/cardr/${id}?size=400`;
     let debugLogs = [];
@@ -144,7 +137,8 @@ export default async function handler(req, res) {
             proxy_ip: proxy.split('@')[1],
             status: null,
             mime: null,
-            converted_to_gif: false,
+            converted_to_webp: false,
+            quality: null,
             error: null,
             time_ms: 0
         };
@@ -162,18 +156,20 @@ export default async function handler(req, res) {
 
                 res.setHeader('Access-Control-Allow-Origin', '*');
 
-                // --- Case 1: Source is MP4 and this is an animated tier card → convert to GIF ---
-                if (shouldBeGif && (mime === 'video/mp4' || mime === 'video/webm')) {
+                // --- Case 1: Source is MP4 and this is an animated tier card → convert to Playable WebP ---
+                if (shouldBePlayableWebp && (mime === 'video/mp4' || mime === 'video/webm')) {
                     try {
-                        const gifBuffer = await mp4BufferToGif(buffer, id);
-                        log.converted_to_gif = true;
+                        const webpBuffer = await mp4BufferToWebp(buffer, id);
+                        log.converted_to_webp = true;
+                        log.quality = '80_preset4';
                         debugLogs.push(log);
 
-                        res.setHeader('Content-Type', 'image/gif');
+                        res.setHeader('Content-Type', 'image/webp');
                         res.setHeader('Cache-Control', 'public, max-age=86400');
-                        res.setHeader('X-Is-Animated', 'true');
+                        res.setHeader('X-Is-Playable-Webp', 'true');
+                        res.setHeader('X-Quality', '80');
                         res.setHeader('X-Source-Mime', mime);
-                        return res.status(200).send(gifBuffer);
+                        return res.status(200).send(webpBuffer);
 
                     } catch (ffmpegErr) {
                         // ffmpeg failed — fall through to return raw video so at least something shows
@@ -182,26 +178,44 @@ export default async function handler(req, res) {
 
                         res.setHeader('Content-Type', mime);
                         res.setHeader('Cache-Control', 'no-cache');
-                        res.setHeader('X-Is-Animated', 'true');
+                        res.setHeader('X-Is-Playable-Webp', 'true');
                         res.setHeader('X-Ffmpeg-Error', 'conversion_failed');
                         return res.status(200).send(buffer);
                     }
                 }
 
-                // --- Case 2: Source is already a GIF ---
+                // --- Case 2: Source is already a GIF (convert to WebP for better compression) ---
                 if (mime === 'image/gif') {
-                    debugLogs.push(log);
-                    res.setHeader('Content-Type', 'image/gif');
-                    res.setHeader('Cache-Control', 'public, max-age=86400');
-                    res.setHeader('X-Is-Animated', 'true');
-                    return res.status(200).send(buffer);
+                    // Convert GIF to WebP for better compression
+                    try {
+                        const webpBuffer = await mp4BufferToWebp(buffer, id);
+                        log.converted_to_webp = true;
+                        log.quality = '80_preset4';
+                        debugLogs.push(log);
+
+                        res.setHeader('Content-Type', 'image/webp');
+                        res.setHeader('Cache-Control', 'public, max-age=86400');
+                        res.setHeader('X-Is-Playable-Webp', 'true');
+                        res.setHeader('X-Quality', '80');
+                        res.setHeader('X-Source-Mime', mime);
+                        return res.status(200).send(webpBuffer);
+                    } catch (convErr) {
+                        // If conversion fails, fall back to original GIF
+                        log.error = `gif_to_webp_failed: ${convErr.message}`;
+                        debugLogs.push(log);
+                        
+                        res.setHeader('Content-Type', 'image/gif');
+                        res.setHeader('Cache-Control', 'public, max-age=86400');
+                        res.setHeader('X-Is-Playable-Webp', 'false');
+                        return res.status(200).send(buffer);
+                    }
                 }
 
                 // --- Case 3: Normal static image (PNG/JPEG) ---
                 debugLogs.push(log);
                 res.setHeader('Content-Type', mime);
                 res.setHeader('Cache-Control', 'public, max-age=31536000');
-                res.setHeader('X-Is-Animated', 'false');
+                res.setHeader('X-Is-Playable-Webp', 'false');
                 return res.status(200).send(buffer);
             }
 
@@ -217,7 +231,7 @@ export default async function handler(req, res) {
         return res.status(200).json({
             message: 'Diagnostics Complete',
             target_url: targetUrl,
-            should_be_gif: shouldBeGif,
+            should_be_playable_webp: shouldBePlayableWebp,
             logs: debugLogs
         });
     }
