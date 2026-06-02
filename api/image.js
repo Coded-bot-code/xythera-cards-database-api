@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { HttpsProxyAgent } from 'https-proxy-agent';
 import { execFile } from 'child_process';
 import { writeFile, readFile, unlink } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -8,18 +7,7 @@ import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
 
-const proxies = [
-    "http://daknlrlb:sfpf7jrfkxta@31.59.20.176:6754",
-    "http://daknlrlb:sfpf7jrfkxta@23.95.150.145:6114",
-    "http://daknlrlb:sfpf7jrfkxta@198.23.239.134:6540",
-    "http://daknlrlb:sfpf7jrfkxta@45.38.107.97:6014",
-    "http://daknlrlb:sfpf7jrfkxta@107.172.163.27:6543",
-    "http://daknlrlb:sfpf7jrfkxta@198.105.121.200:6462",
-    "http://daknlrlb:sfpf7jrfkxta@64.137.96.74:6641",
-    "http://daknlrlb:sfpf7jrfkxta@216.10.27.159:6837",
-    "http://daknlrlb:sfpf7jrfkxta@142.111.67.146:5611",
-    "http://daknlrlb:sfpf7jrfkxta@191.96.254.138:6185"
-];
+// Proxies removed — expired. Use direct requests to Shoob CDN.
 
 // ─── Magic-byte detection ──────────────────────────────────────────────────────
 
@@ -145,12 +133,11 @@ async function mp4ToGif(mp4Buf, id) {
 // The shoob API redirects to cdn.shoob.gg which requires a Referer header.
 // We must keep that header through the redirect chain ourselves.
 
-async function fetchFollowingRedirects(startUrl, agent, maxHops = 6) {
+async function fetchFollowingRedirects(startUrl, agent = null, maxHops = 6) {
     let url = startUrl;
 
     for (let hop = 0; hop < maxHops; hop++) {
-        const resp = await axios.get(url, {
-            httpsAgent: agent,
+        const config = {
             maxRedirects: 0,           // We handle redirects manually
             responseType: 'arraybuffer',
             timeout: 15000,
@@ -160,7 +147,11 @@ async function fetchFollowingRedirects(startUrl, agent, maxHops = 6) {
                 'Accept': 'image/webp,image/gif,image/apng,image/*,video/*,*/*;q=0.8',
                 'Referer': 'https://shoob.gg/'
             }
-        });
+        };
+
+        if (agent) config.httpsAgent = agent;
+
+        const resp = await axios.get(url, config);
 
         if (resp.status >= 300 && resp.status <= 308) {
             const location = resp.headers.location;
@@ -208,9 +199,9 @@ export default async function handler(req, res) {
     const logs = [];
 
     for (let attempt = 0; attempt < 3; attempt++) {
-        const proxy = proxies[Math.floor(Math.random() * proxies.length)];
-        const agent = new HttpsProxyAgent(proxy);
-        const log = { attempt: attempt + 1, proxy_ip: proxy.split('@')[1], status: null, mime: null, final_url: null, converted: false, error: null, ms: 0 };
+        // Try direct connection (no proxy). Attempts exist to handle transient network errors.
+        const agent = null;
+        const log = { attempt: attempt + 1, proxy_ip: 'direct', status: null, mime: null, final_url: null, converted: false, error: null, ms: 0 };
 
         try {
             const t0 = Date.now();
