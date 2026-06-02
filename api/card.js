@@ -3,7 +3,6 @@ import path from 'path';
 
 // Tier S and Tier 6 cards are served by shoob as animated WebP.
 // image.js converts them to GIF when animated=true is in the query.
-const ANIMATED_TIERS = new Set(['TIER S', 'TIER 6']);
 
 export default function handler(req, res) {
     const { key, random, id } = req.query;
@@ -29,16 +28,17 @@ export default function handler(req, res) {
             return res.status(404).json({ error: 'Card not found' });
         }
 
-        const cardId    = card.id || card.card_id;
-        const tier      = card.tier || 'Unknown';
-        const isAnimated = ANIMATED_TIERS.has(tier);
+        const cardId = card.id || card.card_id;
+        const tier = card.tier || 'Unknown';
+        const normalizedTier = String(tier || '').toUpperCase().trim();
+        const isAnimated = /^(TIER )?(S|6)$/.test(normalizedTier);
 
         const proto = req.headers['x-forwarded-proto'] || 'https';
-        const host  = req.headers.host;
+        const host = req.headers.host;
 
         // /api/image proxies shoob's CDN (follows redirect server-side).
         // animated=true tells image.js to convert the animated WebP to a GIF.
-        const imageUrl = `${proto}://${host}/api/image?id=${cardId}&animated=${isAnimated}`;
+        const imageUrl = `${proto}://${host}/api/image?id=${cardId}&animated=${isAnimated}&size=original`;
 
         return res.status(200).json({
             id:          cardId,

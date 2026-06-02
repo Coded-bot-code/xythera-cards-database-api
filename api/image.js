@@ -87,14 +87,14 @@ async function animatedWebPToGif(webpBuf, id) {
         // Pass 1 – generate optimised palette
         await execFileAsync('ffmpeg', [
             '-y', '-i', inPath,
-            '-vf', 'fps=15,scale=400:-1:flags=lanczos,palettegen=max_colors=256:stats_mode=diff',
+            '-vf', 'fps=15,scale=iw:-1:flags=lanczos,palettegen=max_colors=256:stats_mode=diff',
             palPath
         ], { timeout: 25000 });
 
         // Pass 2 – render GIF using palette with Bayer dithering
         await execFileAsync('ffmpeg', [
             '-y', '-i', inPath, '-i', palPath,
-            '-lavfi', 'fps=15,scale=400:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
+            '-lavfi', 'fps=15,scale=iw:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
             '-loop', '0',
             outPath
         ], { timeout: 35000 });
@@ -120,13 +120,13 @@ async function mp4ToGif(mp4Buf, id) {
 
         await execFileAsync('ffmpeg', [
             '-y', '-i', inPath,
-            '-vf', 'fps=15,scale=400:-1:flags=lanczos,palettegen=max_colors=256:stats_mode=diff',
+            '-vf', 'fps=15,scale=iw:-1:flags=lanczos,palettegen=max_colors=256:stats_mode=diff',
             palPath
         ], { timeout: 25000 });
 
         await execFileAsync('ffmpeg', [
             '-y', '-i', inPath, '-i', palPath,
-            '-lavfi', 'fps=15,scale=400:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
+            '-lavfi', 'fps=15,scale=iw:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
             '-loop', '0',
             outPath
         ], { timeout: 35000 });
@@ -198,11 +198,12 @@ export default async function handler(req, res) {
     // animated=true means this is a Tier 6 or Tier S card —
     // shoob serves these as animated WebP; we convert to GIF.
     const wantGif = animated === 'true';
+    const requestedSize = String(req.query.size || 'original').trim();
 
     // The shoob /cardr/ endpoint redirects to the real CDN URL.
     // We follow the redirect server-side so we keep control over headers
     // and can stream the final bytes back ourselves.
-    const shoobUrl = `https://api.shoob.gg/site/api/cardr/${id}?size=400`;
+    const shoobUrl = `https://api.shoob.gg/site/api/cardr/${id}?size=${encodeURIComponent(requestedSize)}`;
 
     const logs = [];
 
